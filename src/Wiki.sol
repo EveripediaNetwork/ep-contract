@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0
-pragma solidity 0.8.11;
+pragma solidity ^0.8.13;
 
-// TODO: upgradable, better way to post ipfs instead of string
-// TODO: signature mandatory to post? payment in IQ?
+// TODO: constructor w validator // setter for validator // only by owner
 contract Wiki {
     /// @dev keccak256("SignedPost(string ipfs,address user,uint256 deadline)")
     bytes32 private constant SIGNED_POST_TYPEHASH = 0x2786d465b1ae76a678938e05e206e58472f266dfa9f8534a71c3e35dc91efb45;
