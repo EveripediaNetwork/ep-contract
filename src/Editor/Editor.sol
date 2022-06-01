@@ -2,8 +2,7 @@
 pragma solidity ^0.8.13;
 // transferable nft user needs this nft to create wikis
 
-import "../LilOwnable.sol";
-import "../Strings.sol";
+import "../utils/Strings.sol";
 import "solmate/tokens/ERC721.sol";
 import "solmate/utils/SafeTransferLib.sol";
 import "solmate/auth/Owned.sol";
@@ -26,17 +25,6 @@ contract Editor is ERC721, Owned {
     ) payable ERC721(name, symbol) Owned(msg.sender) {
         baseURI = _baseURI;
     }
-
-    // function mint(uint16 amount) external payable {
-    //     if (currentTokenId + amount >= TOTAL_SUPPLY) revert NoTokensLeft();
-    //     if (msg.value < amount * PRICE_PER_MINT) revert NotEnoughETH();
-
-    //     unchecked {
-    //         for (uint16 index = 0; index < amount; index++) {
-    //             _mint(msg.sender, currentTokenId++);
-    //         }
-    //     }
-    // }
 
     function mintTo(address recipient) public payable returns (uint256) {
         if (msg.value != PRICE_PER_MINT) {
