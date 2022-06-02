@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity ^0.8.13;
-import "../Utils/Base64.sol";
-import "../Utils/Strings.sol";
+import {Base64} from "../Utils/Base64.sol";
+import {Strings} from "../Utils/Strings.sol";
 
 interface ERC721 {
     event Transfer(

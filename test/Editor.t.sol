@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "../lib/forge-std/src/Test.sol";
-import "src/Editor/Editor.sol";
+import {Editor, ERC721TokenReceiver} from "src/Editor/Editor.sol";
 
 contract TestEditor is Test {
     using stdStorage for StdStorage;

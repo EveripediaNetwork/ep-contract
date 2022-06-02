@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.13;
 
-import "solmate/auth/Owned.sol";
-import "./Validator/IValidator.sol";
+import {Owned} from "solmate/auth/Owned.sol";
+import {IValidator} from "./Validator/IValidator.sol";
 
 /// @title Wiki
 /// @author kesar.eth
