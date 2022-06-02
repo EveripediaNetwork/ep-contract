@@ -68,14 +68,18 @@ interface ERC165 {
 }
 
 contract IRewardRenderer {
-    function renderReward(string memory _editorUsername)
-        public
-        pure
-        returns (string memory)
-    {}
+    function renderReward(
+        address _editorAddress,
+        string memory _editorUsername,
+        string memory _rewardDate,
+        uint256 _position
+    ) public pure returns (string memory) {}
 }
 
 contract Reward is ERC721 {
+    /// -----------------------------------------------------------------------
+    /// Storage variables
+    /// -----------------------------------------------------------------------
     string public name;
     string public symbol;
     uint256 public totalSupply;
@@ -83,12 +87,19 @@ contract Reward is ERC721 {
     address private _rendererAddress;
 
     struct Editor {
+        address _editorAddress;
         string _editorUsername;
+        string _rewardDate;
+        uint256 _position;
     }
 
     mapping(uint256 => address) private _ownership;
     mapping(address => uint256) private _balances;
     mapping(uint256 => Editor) public editors;
+
+    /// -----------------------------------------------------------------------
+    /// Constructor
+    /// -----------------------------------------------------------------------
 
     constructor(
         string memory _name,
@@ -101,17 +112,28 @@ contract Reward is ERC721 {
         _rendererAddress = _renderer;
     }
 
-    function mint(address _to, string memory _editorUsername)
-        public
-        returns (bool)
-    {
+    /// -----------------------------------------------------------------------
+    /// External functions
+    /// -----------------------------------------------------------------------
+
+    function mint(
+        address _to,
+        string memory _editorUsername,
+        string memory _rewardDate,
+        uint256 _position
+    ) public returns (bool) {
         require(
             msg.sender == _admin,
             "Reward: Only the admin can mint new tokens"
         );
         require(_to != address(0), "Reward: Cannot mint to the null address");
 
-        Editor memory _editor = Editor(_editorUsername);
+        Editor memory _editor = Editor(
+            _to,
+            _editorUsername,
+            _rewardDate,
+            _position
+        );
         totalSupply++;
         _ownership[totalSupply] = _to;
         _balances[_to] = _balances[_to] + 1;
@@ -132,6 +154,7 @@ contract Reward is ERC721 {
             "Reward: Cannot change to the null address"
         );
         _rendererAddress = _newRenderer;
+        return true;
     }
 
     function tokenURI(uint256 _tokenId)
@@ -239,7 +262,7 @@ contract Reward is ERC721 {
     // this function is disabled since we don;t want to allow transfers
     function getApproved(uint256 _tokenId)
         public
-        view
+        pure
         override
         returns (address)
     {
@@ -249,7 +272,7 @@ contract Reward is ERC721 {
     // this function is disabled since we don;t want to allow transfers
     function isApprovedForAll(address _owner, address _operator)
         public
-        view
+        pure
         override
         returns (bool)
     {
@@ -274,6 +297,12 @@ contract Reward is ERC721 {
         returns (string memory)
     {
         IRewardRenderer renderer = IRewardRenderer(_rendererAddress);
-        return renderer.renderReward(_editor._editorUsername);
+        return
+            renderer.renderReward(
+                _editor._editorAddress,
+                _editor._editorUsername,
+                _editor._rewardDate,
+                _editor._position
+            );
     }
 }
