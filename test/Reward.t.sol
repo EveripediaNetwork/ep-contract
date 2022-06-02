@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.13;
 
-import "../lib/forge-std/src/Test.sol";
-import "src/Reward/Reward.sol";
-import "src/Reward/RewardRenderer.sol";
+import {Test} from "../lib/forge-std/src/Test.sol";
+import {Reward} from "src/Reward/Reward.sol";
+import {RewardRenderer} from "src/Reward/RewardRenderer.sol";
 
 contract TestReward is Test {
     Reward internal reward;
