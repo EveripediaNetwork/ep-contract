@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 // transferable nft user needs this nft to create wikis
 
-import "../utils/Strings.sol";
+import "../Utils/Strings.sol";
 import "solmate/tokens/ERC721.sol";
 import "solmate/utils/SafeTransferLib.sol";
 import "solmate/auth/Owned.sol";

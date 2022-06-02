@@ -1,30 +1,49 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.13;
 
-// TODO: constructor w validator // setter for validator // only by owner
-contract Wiki {
+import "solmate/auth/Owned.sol";
+import "./Validator/IValidator.sol";
+
+contract Wiki is Owned {
     /// @dev keccak256("SignedPost(string ipfs,address user,uint256 deadline)")
     bytes32 private constant SIGNED_POST_TYPEHASH = 0x2786d465b1ae76a678938e05e206e58472f266dfa9f8534a71c3e35dc91efb45;
+    IValidator private validator;
 
     /// @notice the EIP-712 domain separator
     bytes32 private immutable EIP_712_DOMAIN_SEPARATOR =
-        keccak256(
-            abi.encode(
-                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                keccak256(bytes("EP")),
-                keccak256(bytes("1")),
-                _chainID(),
-                address(this)
-            )
-        );
+    keccak256(
+        abi.encode(
+            keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+            keccak256(bytes("EP")),
+            keccak256(bytes("1")),
+            _chainID(),
+            address(this)
+        )
+    );
+
+    error WikiNotValid();
+    error InvalidSignature();
+    error DeadlineExpired();
 
     event Posted(address indexed _from, string _ipfs);
+
+    constructor(address _validator) Owned(msg.sender) {
+        validator = IValidator(_validator);
+    }
+
+    /// @notice Set a validator for wikis
+    /// @param _validator validator contract address
+    function setValidator(IValidator _validator) onlyOwner external {
+        validator = _validator;
+    }
 
     /// @notice Post IPFS hash
     /// @param ipfs The IPFS Hash
     function post(string calldata ipfs) external {
-        address sender = msg.sender;
-        emit Posted(sender, ipfs);
+        if (validator.validate(msg.sender, ipfs) == false) {
+            revert WikiNotValid();
+        }
+        emit Posted(msg.sender, ipfs);
     }
 
     /// @notice Post IPFS hash given an EIP-712 signature
@@ -42,7 +61,9 @@ contract Wiki {
         bytes32 _r,
         bytes32 _s
     ) external {
-        require(_deadline == 0 || _deadline >= block.timestamp, "deadline expired");
+        if (_deadline < block.timestamp) {
+            revert DeadlineExpired();
+        }
 
         bytes32 digest = keccak256(
             abi.encodePacked(
@@ -54,7 +75,13 @@ contract Wiki {
 
         address recoveredAddress = ecrecover(digest, _v, _r, _s);
 
-        require(recoveredAddress != address(0) && recoveredAddress == _user, "invalid signature");
+        if (recoveredAddress == address(0) || recoveredAddress != _user) {
+            revert InvalidSignature();
+        }
+
+        if (validator.validate(_user, ipfs) == false) {
+            revert WikiNotValid();
+        }
 
         emit Posted(recoveredAddress, ipfs);
     }
@@ -64,4 +91,8 @@ contract Wiki {
             id := chainid()
         }
     }
+    function DOMAIN_SEPARATOR() public view virtual returns (bytes32) {
+        return EIP_712_DOMAIN_SEPARATOR;
+    }
+
 }
