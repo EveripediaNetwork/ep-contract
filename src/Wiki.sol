@@ -4,10 +4,38 @@ pragma solidity ^0.8.13;
 import "solmate/auth/Owned.sol";
 import "./Validator/IValidator.sol";
 
+/// @title Wiki
+/// @author kesar.eth
+/// @notice A contract to publish wikis
 contract Wiki is Owned {
+
+    /// -----------------------------------------------------------------------
+    /// Errors
+    /// -----------------------------------------------------------------------
+
+    error WikiNotValid();
+    error InvalidSignature();
+    error DeadlineExpired();
+
+    /// -----------------------------------------------------------------------
+    /// Events
+    /// -----------------------------------------------------------------------
+
+    event Posted(address indexed _from, string _ipfs);
+
+    /// -----------------------------------------------------------------------
+    /// Storage variables
+    /// -----------------------------------------------------------------------
+
+    /// @notice contract that validates if wiki should be pushed
+    IValidator private validator;
+
+    /// -----------------------------------------------------------------------
+    /// Immutable parameters
+    /// -----------------------------------------------------------------------
+
     /// @dev keccak256("SignedPost(string ipfs,address user,uint256 deadline)")
     bytes32 private constant SIGNED_POST_TYPEHASH = 0x2786d465b1ae76a678938e05e206e58472f266dfa9f8534a71c3e35dc91efb45;
-    IValidator private validator;
 
     /// @notice the EIP-712 domain separator
     bytes32 private immutable EIP_712_DOMAIN_SEPARATOR =
@@ -21,11 +49,9 @@ contract Wiki is Owned {
         )
     );
 
-    error WikiNotValid();
-    error InvalidSignature();
-    error DeadlineExpired();
-
-    event Posted(address indexed _from, string _ipfs);
+    /// -----------------------------------------------------------------------
+    /// Constructor
+    /// -----------------------------------------------------------------------
 
     constructor(address _validator) Owned(msg.sender) {
         validator = IValidator(_validator);
@@ -36,6 +62,10 @@ contract Wiki is Owned {
     function setValidator(IValidator _validator) onlyOwner external {
         validator = _validator;
     }
+
+    /// -----------------------------------------------------------------------
+    /// External functions
+    /// -----------------------------------------------------------------------
 
     /// @notice Post IPFS hash
     /// @param ipfs The IPFS Hash
@@ -86,11 +116,21 @@ contract Wiki is Owned {
         emit Posted(recoveredAddress, ipfs);
     }
 
+    /// -----------------------------------------------------------------------
+    /// Internal functions
+    /// -----------------------------------------------------------------------
+
     function _chainID() private view returns (uint256 id) {
         assembly {
             id := chainid()
         }
     }
+
+    /// -----------------------------------------------------------------------
+    /// Getters
+    /// -----------------------------------------------------------------------
+
+    /// @notice DOMAIN_SEPARATOR to generate signatures
     function DOMAIN_SEPARATOR() public view virtual returns (bytes32) {
         return EIP_712_DOMAIN_SEPARATOR;
     }

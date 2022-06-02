@@ -2,12 +2,10 @@
 pragma solidity ^0.8.13;
 
 import "../lib/forge-std/src/Test.sol";
-
 import "src/Editor/Editor.sol";
 
 contract TestEditor is Test {
     using stdStorage for StdStorage;
-    Vm internal constant hevm = Vm(HEVM_ADDRESS);
     Editor internal editor;
 
     function setUp() public {
@@ -38,7 +36,7 @@ contract TestEditor is Test {
             .find();
         bytes32 loc = bytes32(slot);
         bytes32 mockedCurrentTokenId = bytes32(abi.encode(10000));
-        hevm.store(address(editor), loc, mockedCurrentTokenId);
+        vm.store(address(editor), loc, mockedCurrentTokenId);
         editor.mintTo{value: 0.08 ether}(address(1));
     }
 
@@ -57,7 +55,7 @@ contract TestEditor is Test {
         uint160 ownerOfTokenIdOne = uint160(
             uint256(
                 (
-                    hevm.load(
+                    vm.load(
                         address(editor),
                         bytes32(abi.encode(slotOfNewOwner))
                     )
@@ -76,13 +74,13 @@ contract TestEditor is Test {
             .find();
 
         uint256 balanceFirstMint = uint256(
-            hevm.load(address(editor), bytes32(slotBalance))
+            vm.load(address(editor), bytes32(slotBalance))
         );
         assertEq(balanceFirstMint, 1);
 
         editor.mintTo{value: 0.08 ether}(address(1));
         uint256 balanceSecondMint = uint256(
-            hevm.load(address(editor), bytes32(slotBalance))
+            vm.load(address(editor), bytes32(slotBalance))
         );
         assertEq(balanceSecondMint, 2);
     }
@@ -104,13 +102,13 @@ contract TestEditor is Test {
             .find();
 
         uint256 balance = uint256(
-            hevm.load(address(editor), bytes32(slotBalance))
+            vm.load(address(editor), bytes32(slotBalance))
         );
         assertEq(balance, 1);
     }
 
     function testFailUnSafeContractReceiver() public {
-        hevm.etch(address(1), bytes("mock code"));
+        vm.etch(address(1), bytes("mock code"));
         editor.mintTo{value: 0.08 ether}(address(1));
     }
 
@@ -135,19 +133,19 @@ contract TestEditor is Test {
         // Check that the balance of the contract is correct
         assertEq(address(editor).balance, editor.PRICE_PER_MINT());
         // Confirm that a non-owner cannot withdraw
-        hevm.expectRevert("UNAUTHORIZED");
-        hevm.startPrank(address(0xd3ad));
+        vm.expectRevert("UNAUTHORIZED");
+        vm.startPrank(address(0xd3ad));
         editor.withdrawPayments(payable(address(0xd3ad)));
-        hevm.stopPrank();
+        vm.stopPrank();
     }
 }
 
 contract Receiver is ERC721TokenReceiver {
     function onERC721Received(
-        address operator,
-        address from,
-        uint256 id,
-        bytes calldata data
+        address,
+        address,
+        uint256,
+        bytes calldata
     ) external pure override returns (bytes4) {
         return this.onERC721Received.selector;
     }
