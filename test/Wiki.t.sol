@@ -6,7 +6,8 @@ import {Test} from "../lib/forge-std/src/Test.sol";
 import {Wiki} from "../src/Wiki.sol";
 import {NoValidator} from "../src/Validator/NoValidator.sol";
 import {EditorValidator} from "../src/Validator/EditorValidator.sol";
-import "forge-std/console.sol";
+
+// import "forge-std/console.sol";
 
 contract TestWiki is Test {
     Wiki wiki;
@@ -24,20 +25,6 @@ contract TestWiki is Test {
         editor = vm.addr(0xBEEF);
     }
 
-    function testEditorValidator() public {
-        for (uint256 i = 0; i < 5; i++) {
-            editorValidator.validate(
-                editor,
-                "Qmb7Kc2r7oH6ff5VdvV97ynuv9uVNXPVppjiMvkGF98F6v"
-            );
-        }
-        vm.expectRevert("ExceededEditLimit");
-        editorValidator.validate(
-            editor,
-            "Qmb7Kc2r7oH6ff5VdvV97ynuv9uVNXPVppjiMvkGF98F6v"
-        );
-    }
-
     function testValidate() public {
         for (uint256 i = 0; i < 5; i++) {
             editorValidator.validate(
@@ -46,44 +33,18 @@ contract TestWiki is Test {
             );
         }
 
-        skip(1 days);
-
+        skip(1.5 days);
         for (uint256 i = 0; i < 5; i++) {
             editorValidator.validate(
                 editor,
                 "Qmb7Kc2r7oH6ff5VdvV97ynuv9uVNXPVppjiMvkGF98F6v"
             );
         }
-        skip(3 days);
-
-        for (uint256 i = 0; i < 3; i++) {
-            editorValidator.validate(
-                editor,
-                "Qmb7Kc2r7oH6ff5VdvV97ynuv9uVNXPVppjiMvkGF98F6v"
-            );
-        }
-        skip(1 days);
-
-        for (uint256 i = 0; i < 5; i++) {
-            editorValidator.validate(
-                editor,
-                "Qmb7Kc2r7oH6ff5VdvV97ynuv9uVNXPVppjiMvkGF98F6v"
-            );
-        }
-        skip(10 hours);
-
-        vm.expectRevert("ExceededEditLimit");
+        vm.expectRevert(EditorValidator.ExceededEditLimit.selector);
         editorValidator.validate(
             editor,
             "Qmb7Kc2r7oH6ff5VdvV97ynuv9uVNXPVppjiMvkGF98F6v"
         );
-
-        // TODO: fix below test failed which is not right
-        // skip(4 hours);
-        // editorValidator.validate(
-        //     editor,
-        //     "Qmb7Kc2r7oH6ff5VdvV97ynuv9uVNXPVppjiMvkGF98F6v"
-        // );
     }
 
     function testWrongValidatorPost() public {

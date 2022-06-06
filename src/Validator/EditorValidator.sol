@@ -14,15 +14,16 @@ contract EditorValidator is IValidator {
     /// -----------------------------------------------------------------------
     /// Storage variables
     /// -----------------------------------------------------------------------
-
     uint256 public editLimit = 5;
 
-    struct Editor {
+    struct RecentEd {
         uint256 _edits;
-        uint256 _lastEdit;
+        uint256[] _allEdits;
+        mapping(uint256 => uint256) _editsByIndex;
     }
-    /// @notice The amount of edits
-    mapping(address => Editor) public edits;
+    mapping(address => RecentEd) public recentEdits;
+    uint256 noOfEdits = 0;
+    uint256 currentOldestIndex = 0;
 
     /// -----------------------------------------------------------------------
     /// External functions
@@ -33,20 +34,34 @@ contract EditorValidator is IValidator {
         external
         returns (bool)
     {
-        uint256 later = edits[_user]._lastEdit + 1 days;
-        if (block.timestamp >= later) {
-            edits[_user]._edits = 0;
-            edits[_user]._lastEdit = block.timestamp;
+        uint256 oldestTime = recentEdits[_user]._editsByIndex[
+            currentOldestIndex
+        ];
+
+        if (noOfEdits < editLimit) {
+            recentEdits[_user]._editsByIndex[noOfEdits] = uint256(
+                block.timestamp
+            );
+            noOfEdits++;
+        } else if (block.timestamp - oldestTime > 1 days) {
+            recentEdits[_user]._editsByIndex[currentOldestIndex] = uint256(
+                block.timestamp
+            );
+            if (currentOldestIndex == editLimit - 1) {
+                currentOldestIndex = 0;
+            } else {
+                currentOldestIndex++;
+            }
+            noOfEdits = 1;
+        } else {
+            revert ExceededEditLimit();
         }
 
-        require(edits[_user]._edits < editLimit, "ExceededEditLimit");
-        edits[_user]._edits++;
-        edits[_user]._lastEdit = block.timestamp;
+        // uint256 _index = recentEdits[_user]._editsByIndex[noOfEdits - 1];
         bytes memory _ipfsBytes = bytes(_ipfs);
         if (_ipfsBytes.length != 46) {
             revert WrongIPFSLength();
         }
-
         return true;
     }
 }
