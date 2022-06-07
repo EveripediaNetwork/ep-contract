@@ -14,37 +14,50 @@ contract EditorValidator is IValidator {
     /// -----------------------------------------------------------------------
     /// Storage variables
     /// -----------------------------------------------------------------------
-    mapping(address => uint256[]) edits;
-    uint256 count;
+
+    mapping(address => uint32[5]) edits;
 
     /// -----------------------------------------------------------------------
     /// External functions
     /// -----------------------------------------------------------------------
 
-    // mapping of editors and edits / blocktimestamps in order of calculate how many edits in X period of time
+    /// @notice Review that an editor can post a wiki based in previous edits
+    /// @param _user The user to approve the module for
+    /// @param _ipfs The IPFS Hash
     function validate(address _user, string calldata _ipfs)
         external
         returns (bool)
     {
-        // check if array is full
-        if (edits[_user].length < 5) {
-            edits[_user].push(uint256(block.timestamp)); // add new element to array
-        } else if (edits[_user].length == 5) // check if array is full
-        {
-            // check if the oldest edit time is older than 1 day, #NOTE: the oldest edit time is the first element in the array
-            if (block.timestamp - edits[_user][0] >= 1 days) {
-                // shift the first element to the end of the array and reorder the array
-                for (uint256 i = 0; i < edits[_user].length - 1; i++) {
-                    edits[_user][i] = edits[_user][i + 1];
+        uint32[5] memory userEdits = edits[_user];
+
+        if (userEdits[4] == 0) {
+            for (uint256 i = 0; i < userEdits.length; ) {
+                if (userEdits[i] == 0) {
+                    userEdits[i] = uint32(block.timestamp);
+                    break;
                 }
-                edits[_user].pop(); // remove the last element from the array, which is now the oldest edit time
-                edits[_user].push(block.timestamp); // add the new edit time to the end of the array
+
+                unchecked {
+                    ++i;
+                }
+            }
+        } else {
+            if (block.timestamp - userEdits[0] >= 1 days) {
+                for (uint256 i = 0; i < userEdits.length - 1; ) {
+                    userEdits[i] = userEdits[i + 1];
+
+                    unchecked {
+                        ++i;
+                    }
+                }
+                userEdits[4] = uint32(block.timestamp);
             } else {
                 revert ExceededEditLimit();
             }
         }
 
-        // uint256 _index = recentEdits[_user]._editsByIndex[noOfEdits - 1];
+        edits[_user] = userEdits;
+
         bytes memory _ipfsBytes = bytes(_ipfs);
         if (_ipfsBytes.length != 46) {
             revert WrongIPFSLength();

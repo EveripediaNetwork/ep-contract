@@ -12,7 +12,6 @@ import {EditorValidator} from "../src/Validator/EditorValidator.sol";
 contract TestWiki is Test {
     Wiki wiki;
     NoValidator noValidator;
-    EditorValidator editorValidator;
     address editor;
 
     bytes32 private constant SIGNED_POST_TYPEHASH =
@@ -21,35 +20,7 @@ contract TestWiki is Test {
     function setUp() public {
         wiki = new Wiki(vm.addr(1));
         noValidator = new NoValidator();
-        editorValidator = new EditorValidator();
         editor = vm.addr(0xBEEF);
-    }
-
-    function testValidate() public {
-        for (uint256 i = 0; i < 5; i++) {
-            editorValidator.validate(
-                editor,
-                "Qmb7Kc2r7oH6ff5VdvV97ynuv9uVNXPVppjiMvkGF98F6v"
-            );
-        }
-        skip(10 hours);
-        vm.expectRevert(EditorValidator.ExceededEditLimit.selector);
-        editorValidator.validate(
-            editor,
-            "Qmb7Kc2r7oH6ff5VdvV97ynuv9uVNXPVppjiMvkGF98F6v"
-        );
-        skip(14 hours);
-        for (uint256 i = 0; i < 5; i++) {
-            editorValidator.validate(
-                editor,
-                "Qmb7Kc2r7oH6ff5VdvV97ynuv9uVNXPVppjiMvkGF98F6v"
-            );
-        }
-        vm.expectRevert(EditorValidator.ExceededEditLimit.selector);
-        editorValidator.validate(
-            editor,
-            "Qmb7Kc2r7oH6ff5VdvV97ynuv9uVNXPVppjiMvkGF98F6v"
-        );
     }
 
     function testWrongValidatorPost() public {
