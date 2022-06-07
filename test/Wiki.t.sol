@@ -32,8 +32,13 @@ contract TestWiki is Test {
                 "Qmb7Kc2r7oH6ff5VdvV97ynuv9uVNXPVppjiMvkGF98F6v"
             );
         }
-
-        skip(1.5 days);
+        skip(10 hours);
+        vm.expectRevert(EditorValidator.ExceededEditLimit.selector);
+        editorValidator.validate(
+            editor,
+            "Qmb7Kc2r7oH6ff5VdvV97ynuv9uVNXPVppjiMvkGF98F6v"
+        );
+        skip(14 hours);
         for (uint256 i = 0; i < 5; i++) {
             editorValidator.validate(
                 editor,

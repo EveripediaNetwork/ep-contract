@@ -14,16 +14,8 @@ contract EditorValidator is IValidator {
     /// -----------------------------------------------------------------------
     /// Storage variables
     /// -----------------------------------------------------------------------
-    uint256 public editLimit = 5;
-
-    struct RecentEd {
-        uint256 _edits;
-        uint256[] _allEdits;
-        mapping(uint256 => uint256) _editsByIndex;
-    }
-    mapping(address => RecentEd) public recentEdits;
-    uint256 noOfEdits = 0;
-    uint256 currentOldestIndex = 0;
+    mapping(address => uint256[]) edits;
+    uint256 count;
 
     /// -----------------------------------------------------------------------
     /// External functions
@@ -34,27 +26,22 @@ contract EditorValidator is IValidator {
         external
         returns (bool)
     {
-        uint256 oldestTime = recentEdits[_user]._editsByIndex[
-            currentOldestIndex
-        ];
-
-        if (noOfEdits < editLimit) {
-            recentEdits[_user]._editsByIndex[noOfEdits] = uint256(
-                block.timestamp
-            );
-            noOfEdits++;
-        } else if (block.timestamp - oldestTime > 1 days) {
-            recentEdits[_user]._editsByIndex[currentOldestIndex] = uint256(
-                block.timestamp
-            );
-            if (currentOldestIndex == editLimit - 1) {
-                currentOldestIndex = 0;
+        // check if array is full
+        if (edits[_user].length < 5) {
+            edits[_user].push(uint256(block.timestamp)); // add new element to array
+        } else if (edits[_user].length == 5) // check if array is full
+        {
+            // check if the oldest edit time is older than 1 day, #NOTE: the oldest edit time is the first element in the array
+            if (block.timestamp - edits[_user][0] >= 1 days) {
+                // shift the first element to the end of the array and reorder the array
+                for (uint256 i = 0; i < edits[_user].length - 1; i++) {
+                    edits[_user][i] = edits[_user][i + 1];
+                }
+                edits[_user].pop(); // remove the last element from the array, which is now the oldest edit time
+                edits[_user].push(block.timestamp); // add the new edit time to the end of the array
             } else {
-                currentOldestIndex++;
+                revert ExceededEditLimit();
             }
-            noOfEdits = 1;
-        } else {
-            revert ExceededEditLimit();
         }
 
         // uint256 _index = recentEdits[_user]._editsByIndex[noOfEdits - 1];
