@@ -15,6 +15,7 @@ contract EditorValidator is IValidator {
     /// Storage variables
     /// -----------------------------------------------------------------------
 
+    /// @dev fix before year 2106
     mapping(address => uint32[5]) edits;
 
     /// -----------------------------------------------------------------------
