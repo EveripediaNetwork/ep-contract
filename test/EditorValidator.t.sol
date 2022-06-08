@@ -35,14 +35,14 @@ contract TestEditorValidator is Test {
             editorValidator.validate(editor, "Qmb7Kc2r7oH6ff5VdvV97ynuv9uVNXPVppjiMvkGF98F6v");
         }
         skip(10 hours);
-        assertEq(editorValidator.getEditsCount(editor), 2);
+        assertEq(editorValidator.getRemainEditsCount(editor), 2);
         skip(14 hours);
-        assertEq(editorValidator.getEditsCount(editor), 5);
+        assertEq(editorValidator.getRemainEditsCount(editor), 5);
         for (uint256 i = 0; i < 5; i++) {
             editorValidator.validate(editor, "Qmb7Kc2r7oH6ff5VdvV97ynuv9uVNXPVppjiMvkGF98F6v");
         }
-        assertEq(editorValidator.getEditsCount(editor), 0);
+        assertEq(editorValidator.getRemainEditsCount(editor), 0);
         skip(1 days);
-        assertEq(editorValidator.getEditsCount(editor), 5);
+        assertEq(editorValidator.getRemainEditsCount(editor), 5);
     }
 }
