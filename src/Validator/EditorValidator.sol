@@ -66,14 +66,9 @@ contract EditorValidator is IValidator {
     function getRemainEditsCount(address _user) external view returns (uint256) {
         uint32[5] memory userEdits = edits[_user];
         uint256 count = 0;
-        for (uint256 i = 0; i < userEdits.length; ) {
+        for (uint256 i = 0; i < userEdits.length; ++i) {
             if (userEdits[i] == 0 || block.timestamp - userEdits[i] >= 1 days) {
-                unchecked {
-                    ++count;
-                }
-            }
-            unchecked {
-                ++i;
+                ++count;
             }
         }
         return count;
