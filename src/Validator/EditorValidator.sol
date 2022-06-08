@@ -67,18 +67,11 @@ contract EditorValidator is IValidator {
         uint32[5] memory userEdits = edits[_user];
         uint256 count = 0;
         for (uint256 i = 0; i < userEdits.length; ) {
-            if (userEdits[i] == 0) {
+            if (userEdits[i] == 0 || block.timestamp - userEdits[i] >= 1 days) {
                 unchecked {
                     ++count;
                 }
-            } else {
-                if (block.timestamp - userEdits[i] >= 1 days) {
-                    unchecked {
-                        ++count;
-                    }
-                }
             }
-
             unchecked {
                 ++i;
             }
