@@ -8,18 +8,20 @@ import "../src/Wiki.sol";
 import "../src/Validator/NoValidator.sol";
 
 contract WikiNoValidator is Script {
+    const owner = address(0xaca39b187352d9805deced6e73a3d72abf86e7a0);
     function run() external {
         vm.startBroadcast();
 
-        // Deploy the Novalidator contract
         console.log("Deploying WikiNoValidator....");
         NoValidator noValidator = new NoValidator();
         console.log("Novalidator Deployed", address(noValidator));
 
-        // Deploy the Wiki contract
         console.log("Deploying Wiki contract....");
         Wiki wiki = new Wiki(address(noValidator));
         console.log("Wiki Deployed", address(wiki));
+
+        wiki.setOwner(owner);
+
         vm.stopBroadcast();
     }
 }
