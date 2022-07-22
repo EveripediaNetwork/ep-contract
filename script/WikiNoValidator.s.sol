@@ -9,6 +9,7 @@ import "../src/Validator/NoValidator.sol";
 
 contract WikiNoValidator is Script {
     address constant owner = address(0xaCa39B187352D9805DECEd6E73A3d72ABf86E7A0);
+
     function run() external {
         vm.startBroadcast();
 

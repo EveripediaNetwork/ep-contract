@@ -50,12 +50,8 @@ contract TestWiki is Test {
         string memory ipfs = "Qmb7Kc2r7oH6ff5VdvV97ynuv9uVNXPVppjiMvkGF98F6v";
         uint256 _deadline = block.timestamp;
 
-        (uint8 v, bytes32 r, bytes32 s) = sign(
-            privateKey,
-            ipfs,
-            editor,
-            _deadline
-        );
+        (uint8 v, bytes32 r, bytes32 s) =
+            sign(privateKey, ipfs, editor, _deadline);
         wiki.setValidator(noValidator);
         wiki.postBySig(ipfs, editor, _deadline, v, r, s);
     }
@@ -65,12 +61,8 @@ contract TestWiki is Test {
         string memory ipfs = "Qmb7Kc2r7oH6ff5VdvV97ynuv9uVNXPVppjiMvkGF98F6v";
         uint256 _deadline = block.timestamp;
 
-        (uint8 v, bytes32 r, bytes32 s) = sign(
-            privateKey,
-            ipfs,
-            vm.addr(0xCAFE),
-            _deadline
-        );
+        (uint8 v, bytes32 r, bytes32 s) =
+            sign(privateKey, ipfs, vm.addr(0xCAFE), _deadline);
         vm.expectRevert(Wiki.InvalidSignature.selector);
         wiki.postBySig(ipfs, editor, _deadline, v, r, s);
     }
@@ -80,12 +72,8 @@ contract TestWiki is Test {
         string memory ipfs = "Qmb7Kc2r7oH6ff5VdvV97ynuv9uVNXPVppjiMvkGF98F6v";
         uint256 _deadline = block.timestamp - 1;
 
-        (uint8 v, bytes32 r, bytes32 s) = sign(
-            privateKey,
-            ipfs,
-            editor,
-            _deadline
-        );
+        (uint8 v, bytes32 r, bytes32 s) =
+            sign(privateKey, ipfs, editor, _deadline);
         vm.expectRevert(Wiki.DeadlineExpired.selector);
         wiki.postBySig(ipfs, editor, _deadline, v, r, s);
     }
@@ -97,29 +85,19 @@ contract TestWiki is Test {
         uint256 _deadline
     )
         private
-        returns (
-            uint8,
-            bytes32,
-            bytes32
-        )
+        returns (uint8, bytes32, bytes32)
     {
-        return
-            vm.sign(
-                _privateKey,
-                keccak256(
-                    abi.encodePacked(
-                        "\x19\x01",
-                        wiki.DOMAIN_SEPARATOR(),
-                        keccak256(
-                            abi.encode(
-                                SIGNED_POST_TYPEHASH,
-                                keccak256(bytes(_ipfs)),
-                                _editor,
-                                _deadline
-                            )
-                        )
+        return vm.sign(
+            _privateKey,
+            keccak256(
+                abi.encodePacked(
+                    "\x19\x01",
+                    wiki.DOMAIN_SEPARATOR(),
+                    keccak256(
+                        abi.encode(SIGNED_POST_TYPEHASH, keccak256(bytes(_ipfs)), _editor, _deadline)
                     )
                 )
-            );
+            )
+        );
     }
 }

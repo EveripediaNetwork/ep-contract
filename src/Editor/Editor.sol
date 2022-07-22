@@ -7,7 +7,6 @@ import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
 import {Owned} from "solmate/auth/Owned.sol";
 
 contract Editor is ERC721, Owned {
-
     /// -----------------------------------------------------------------------
     /// Errors
     /// -----------------------------------------------------------------------
@@ -34,7 +33,10 @@ contract Editor is ERC721, Owned {
         string memory name,
         string memory symbol,
         string memory _baseURI
-    ) ERC721(name, symbol) Owned(msg.sender) {
+    )
+        ERC721(name, symbol)
+        Owned(msg.sender)
+    {
         baseURI = _baseURI;
     }
 
@@ -60,7 +62,7 @@ contract Editor is ERC721, Owned {
 
     function withdrawPayments(address payable payee) external onlyOwner {
         uint256 balance = address(this).balance;
-        (bool transferTx, ) = payee.call{value: balance}("");
+        (bool transferTx,) = payee.call{value: balance}("");
         if (!transferTx) {
             revert WithdrawTransfer();
         }
@@ -80,7 +82,7 @@ contract Editor is ERC721, Owned {
         if (ownerOf(tokenId) == address(0)) revert NonExistentTokenURI();
         return
             bytes(baseURI).length > 0
-                ? string(abi.encodePacked(baseURI, Strings.toString(tokenId)))
-                : "";
+            ? string(abi.encodePacked(baseURI, Strings.toString(tokenId)))
+            : "";
     }
 }

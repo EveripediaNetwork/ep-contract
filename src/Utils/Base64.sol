@@ -22,30 +22,20 @@ library Base64 {
             let tablePtr := add(table, 1)
             let resultPtr := add(result, 32)
 
-            for {
-                let i := 0
-            } lt(i, len) {
-
-            } {
+            for { let i := 0 } lt(i, len) {} {
                 i := add(i, 3)
                 let input := and(mload(add(data, i)), 0xffffff)
 
                 let out := mload(add(tablePtr, and(shr(18, input), 0x3F)))
                 out := shl(8, out)
-                out := add(
-                    out,
-                    and(mload(add(tablePtr, and(shr(12, input), 0x3F))), 0xFF)
-                )
+                out :=
+                    add(out, and(mload(add(tablePtr, and(shr(12, input), 0x3F))), 0xFF))
                 out := shl(8, out)
-                out := add(
-                    out,
-                    and(mload(add(tablePtr, and(shr(6, input), 0x3F))), 0xFF)
-                )
+                out :=
+                    add(out, and(mload(add(tablePtr, and(shr(6, input), 0x3F))), 0xFF))
                 out := shl(8, out)
-                out := add(
-                    out,
-                    and(mload(add(tablePtr, and(input, 0x3F))), 0xFF)
-                )
+                out :=
+                    add(out, and(mload(add(tablePtr, and(input, 0x3F))), 0xFF))
                 out := shl(224, out)
 
                 mstore(resultPtr, out)
@@ -54,12 +44,8 @@ library Base64 {
             }
 
             switch mod(len, 3)
-            case 1 {
-                mstore(sub(resultPtr, 2), shl(240, 0x3d3d))
-            }
-            case 2 {
-                mstore(sub(resultPtr, 1), shl(248, 0x3d))
-            }
+                case 1 { mstore(sub(resultPtr, 2), shl(240, 0x3d3d)) }
+                case 2 { mstore(sub(resultPtr, 1), shl(248, 0x3d)) }
 
             mstore(result, encodedLen)
         }

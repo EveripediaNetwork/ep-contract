@@ -19,12 +19,7 @@ contract TestReward is Test {
     }
 
     function testMint() public {
-        bool res = reward.mint(
-            address(1),
-            "the25thbamm.eth",
-            "12 June 2022",
-            3
-        );
+        bool res = reward.mint(address(1), "the25thbamm.eth", "12 June 2022", 3);
         assertTrue(res);
     }
 

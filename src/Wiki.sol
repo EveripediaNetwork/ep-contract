@@ -8,7 +8,6 @@ import {IValidator} from "./Validator/IValidator.sol";
 /// @author kesar.eth
 /// @notice A contract to publish wikis
 contract Wiki is Owned {
-
     /// -----------------------------------------------------------------------
     /// Errors
     /// -----------------------------------------------------------------------
@@ -35,13 +34,15 @@ contract Wiki is Owned {
     /// -----------------------------------------------------------------------
 
     /// @dev keccak256("SignedPost(string ipfs,address user,uint256 deadline)")
-    bytes32 private constant SIGNED_POST_TYPEHASH = 0x2786d465b1ae76a678938e05e206e58472f266dfa9f8534a71c3e35dc91efb45;
+    bytes32 private constant SIGNED_POST_TYPEHASH =
+        0x2786d465b1ae76a678938e05e206e58472f266dfa9f8534a71c3e35dc91efb45;
 
     /// @notice the EIP-712 domain separator
-    bytes32 private immutable EIP_712_DOMAIN_SEPARATOR =
-    keccak256(
+    bytes32 private immutable EIP_712_DOMAIN_SEPARATOR = keccak256(
         abi.encode(
-            keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+            keccak256(
+                "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+            ),
             keccak256(bytes("EP")),
             keccak256(bytes("1")),
             _chainID(),
@@ -59,7 +60,7 @@ contract Wiki is Owned {
 
     /// @notice Set a validator for wikis
     /// @param _validator validator contract address
-    function setValidator(IValidator _validator) onlyOwner external {
+    function setValidator(IValidator _validator) external onlyOwner {
         validator = _validator;
     }
 
@@ -90,7 +91,9 @@ contract Wiki is Owned {
         uint8 _v,
         bytes32 _r,
         bytes32 _s
-    ) external {
+    )
+        external
+    {
         if (_deadline < block.timestamp) {
             revert DeadlineExpired();
         }
@@ -99,7 +102,9 @@ contract Wiki is Owned {
             abi.encodePacked(
                 "\x19\x01",
                 EIP_712_DOMAIN_SEPARATOR,
-                keccak256(abi.encode(SIGNED_POST_TYPEHASH, keccak256(bytes(ipfs)), _user, _deadline))
+                keccak256(
+                    abi.encode(SIGNED_POST_TYPEHASH, keccak256(bytes(ipfs)), _user, _deadline)
+                )
             )
         );
 
@@ -134,5 +139,4 @@ contract Wiki is Owned {
     function DOMAIN_SEPARATOR() public view virtual returns (bytes32) {
         return EIP_712_DOMAIN_SEPARATOR;
     }
-
 }
