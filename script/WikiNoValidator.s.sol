@@ -8,7 +8,7 @@ import "../src/Wiki.sol";
 import "../src/Validator/NoValidator.sol";
 
 contract WikiNoValidator is Script {
-    const owner = address(0xaca39b187352d9805deced6e73a3d72abf86e7a0);
+    address constant owner = address(0xaCa39B187352D9805DECEd6E73A3d72ABf86E7A0);
     function run() external {
         vm.startBroadcast();
 
