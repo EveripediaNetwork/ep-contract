@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 import {Base64} from "../Utils/Base64.sol";
 import {Strings} from "../Utils/Strings.sol";
+import {Owned} from "solmate/auth/Owned.sol";
 
 interface ERC721 {
     event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);
@@ -61,14 +62,13 @@ contract IRewardRenderer {
     ) public pure returns (string memory) {}
 }
 
-contract Reward is ERC721 {
+contract Reward is ERC721, Owned {
     /// -----------------------------------------------------------------------
     /// Storage variables
     /// -----------------------------------------------------------------------
     string public name;
     string public symbol;
     uint256 public totalSupply;
-    address private _admin;
     address private _rendererAddress;
 
     struct Editor {
@@ -90,10 +90,9 @@ contract Reward is ERC721 {
         string memory _name,
         string memory _symbol,
         address _renderer
-    ) {
+    ) Owned(msg.sender) {
         name = _name;
         symbol = _symbol;
-        _admin = msg.sender;
         _rendererAddress = _renderer;
     }
 
@@ -107,7 +106,7 @@ contract Reward is ERC721 {
         string memory _rewardDate,
         uint256 _position
     ) public returns (bool) {
-        require(msg.sender == _admin, "Reward: Only the admin can mint new tokens");
+        require(msg.sender == owner, "Reward: Only the admin can mint new tokens");
         require(_to != address(0), "Reward: Cannot mint to the null address");
 
         Editor memory _editor = Editor(_to, _editorUsername, _rewardDate, _position);
@@ -122,7 +121,7 @@ contract Reward is ERC721 {
     }
 
     function changeRenderer(address _newRenderer) public returns (bool) {
-        require(msg.sender == _admin, "Reward: Only the admin can change the renderer address");
+        require(msg.sender == owner, "Reward: Only the admin can change the renderer address");
         require(_newRenderer != address(0), "Reward: Cannot change to the null address");
         _rendererAddress = _newRenderer;
         return true;
