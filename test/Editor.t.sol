@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.13;
 
-import {Test, stdStorage, StdStorage} from "../lib/forge-std/src/Test.sol";
+import {PRBTest} from "prb-test/PRBTest.sol";
+import {stdStorage, StdStorage} from "forge-std/Storage.sol";
+import {Cheats} from "forge-std/Cheats.sol";
 import {Editor, ERC721TokenReceiver} from "src/Editor/Editor.sol";
 
-contract TestEditor is Test {
+contract TestEditor is PRBTest, Cheats {
     using stdStorage for StdStorage;
 
+    StdStorage private stdstore;
     Editor internal editor;
 
     function setUp() public {

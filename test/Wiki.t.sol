@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.13;
 
-import {Test} from "../lib/forge-std/src/Test.sol";
+import {PRBTest} from "prb-test/PRBTest.sol";
+import {Cheats} from "forge-std/Cheats.sol";
 
 import {Wiki} from "../src/Wiki.sol";
 import {NoValidator} from "../src/Validator/NoValidator.sol";
 import {EditorValidator} from "../src/Validator/EditorValidator.sol";
 
-// import "forge-std/console.sol";
-
-contract TestWiki is Test {
+contract TestWiki is PRBTest, Cheats {
     Wiki wiki;
     NoValidator noValidator;
     address editor;
