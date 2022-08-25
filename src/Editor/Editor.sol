@@ -29,11 +29,7 @@ contract Editor is ERC721, Owned {
     /// Constructor
     /// -----------------------------------------------------------------------
 
-    constructor(
-        string memory name,
-        string memory symbol,
-        string memory _baseURI
-    )
+    constructor(string memory name, string memory symbol, string memory _baseURI)
         ERC721(name, symbol)
         Owned(msg.sender)
     {
@@ -72,17 +68,10 @@ contract Editor is ERC721, Owned {
     /// Getters
     /// -----------------------------------------------------------------------
 
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        virtual
-        override
-        returns (string memory)
-    {
-        if (ownerOf(tokenId) == address(0)) revert NonExistentTokenURI();
-        return
-            bytes(baseURI).length > 0
-            ? string(abi.encodePacked(baseURI, Strings.toString(tokenId)))
-            : "";
+    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+        if (ownerOf(tokenId) == address(0)) {
+            revert NonExistentTokenURI();
+        }
+        return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, Strings.toString(tokenId))) : "";
     }
 }

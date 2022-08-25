@@ -34,15 +34,12 @@ contract Wiki is Owned {
     /// -----------------------------------------------------------------------
 
     /// @dev keccak256("SignedPost(string ipfs,address user,uint256 deadline)")
-    bytes32 private constant SIGNED_POST_TYPEHASH =
-        0x2786d465b1ae76a678938e05e206e58472f266dfa9f8534a71c3e35dc91efb45;
+    bytes32 private constant SIGNED_POST_TYPEHASH = 0x2786d465b1ae76a678938e05e206e58472f266dfa9f8534a71c3e35dc91efb45;
 
     /// @notice the EIP-712 domain separator
     bytes32 private immutable EIP_712_DOMAIN_SEPARATOR = keccak256(
         abi.encode(
-            keccak256(
-                "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-            ),
+            keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
             keccak256(bytes("EP")),
             keccak256(bytes("1")),
             _chainID(),
@@ -84,14 +81,7 @@ contract Wiki is Owned {
     /// @param _v The 129th byte and chain ID of the signature
     /// @param _r The first 64 bytes of the signature
     /// @param _s Bytes 64-128 of the signature
-    function postBySig(
-        string calldata ipfs,
-        address _user,
-        uint256 _deadline,
-        uint8 _v,
-        bytes32 _r,
-        bytes32 _s
-    )
+    function postBySig(string calldata ipfs, address _user, uint256 _deadline, uint8 _v, bytes32 _r, bytes32 _s)
         external
     {
         if (_deadline < block.timestamp) {
@@ -102,9 +92,7 @@ contract Wiki is Owned {
             abi.encodePacked(
                 "\x19\x01",
                 EIP_712_DOMAIN_SEPARATOR,
-                keccak256(
-                    abi.encode(SIGNED_POST_TYPEHASH, keccak256(bytes(ipfs)), _user, _deadline)
-                )
+                keccak256(abi.encode(SIGNED_POST_TYPEHASH, keccak256(bytes(ipfs)), _user, _deadline))
             )
         );
 

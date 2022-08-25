@@ -38,9 +38,7 @@ contract TestReward is PRBTest, Cheats {
         address _newRenderer = address(1234);
         bool res = reward.changeRenderer(_newRenderer);
         assertTrue(res);
-        vm.expectRevert(
-            "Reward: Only the admin can change the renderer address"
-        );
+        vm.expectRevert("Reward: Only the admin can change the renderer address");
         vm.startPrank(address(0xd3ad));
         reward.changeRenderer(_newRenderer);
         vm.stopPrank();

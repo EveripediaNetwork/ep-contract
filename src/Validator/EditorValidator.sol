@@ -25,10 +25,7 @@ contract EditorValidator is IValidator {
     /// @notice Review that an editor can post a wiki based in previous edits
     /// @param _user The user to approve the module for
     /// @param _ipfs The IPFS Hash
-    function validate(address _user, string calldata _ipfs)
-        external
-        returns (bool)
-    {
+    function validate(address _user, string calldata _ipfs) external returns (bool) {
         uint32[5] memory userEdits = edits[_user];
 
         if (userEdits[4] == 0) {
@@ -66,11 +63,7 @@ contract EditorValidator is IValidator {
         return true;
     }
 
-    function getRemainEditsCount(address _user)
-        external
-        view
-        returns (uint256)
-    {
+    function getRemainEditsCount(address _user) external view returns (uint256) {
         uint32[5] memory userEdits = edits[_user];
         uint256 count = 0;
         for (uint256 i = 0; i < userEdits.length; ++i) {

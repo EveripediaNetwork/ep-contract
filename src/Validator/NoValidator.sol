@@ -16,11 +16,7 @@ contract NoValidator is IValidator {
 
     /// @notice Validate Post
     /// @param _ipfs The IPFS Hash
-    function validate(address, string calldata _ipfs)
-        external
-        pure
-        returns (bool)
-    {
+    function validate(address, string calldata _ipfs) external pure returns (bool) {
         bytes memory _ipfsBytes = bytes(_ipfs);
         if (_ipfsBytes.length != 46) {
             revert WrongIPFSLength();

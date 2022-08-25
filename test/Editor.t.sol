@@ -34,8 +34,7 @@ contract TestEditor is PRBTest, Cheats {
     }
 
     function testFailMaxSupplyReached() public {
-        uint256 slot =
-            stdstore.target(address(editor)).sig("currentTokenId()").find();
+        uint256 slot = stdstore.target(address(editor)).sig("currentTokenId()").find();
         bytes32 loc = bytes32(slot);
         bytes32 mockedCurrentTokenId = bytes32(abi.encode(10000));
         vm.store(address(editor), loc, mockedCurrentTokenId);
@@ -48,34 +47,29 @@ contract TestEditor is PRBTest, Cheats {
 
     function testNewMintOwnerRegistered() public {
         editor.mintTo{value: 0.08 ether}(address(1));
-        uint256 slotOfNewOwner = stdstore.target(address(editor)).sig(
-            editor.ownerOf.selector
-        ).with_key(1).find();
+        uint256 slotOfNewOwner = stdstore.target(address(editor)).sig(editor.ownerOf.selector).with_key(1).find();
 
-        uint160 ownerOfTokenIdOne = uint160(
-            uint256((vm.load(address(editor), bytes32(abi.encode(slotOfNewOwner)))))
-        );
+        uint160 ownerOfTokenIdOne = uint160(uint256((vm.load(address(editor), bytes32(abi.encode(slotOfNewOwner))))));
         assertEq(address(ownerOfTokenIdOne), address(1));
     }
 
     function testBalanceIncremented() public {
         editor.mintTo{value: 0.08 ether}(address(1));
-        uint256 slotBalance = stdstore.target(address(editor)).sig(
-            editor.balanceOf.selector
-        ).with_key(address(1)).find();
+        uint256 slotBalance =
+            stdstore.target(address(editor)).sig(editor.balanceOf.selector).with_key(address(1)).find();
 
-        uint256 balanceFirstMint =
-            uint256(vm.load(address(editor), bytes32(slotBalance)));
+        uint256 balanceFirstMint = uint256(vm.load(address(editor), bytes32(slotBalance)));
         assertEq(balanceFirstMint, 1);
 
         editor.mintTo{value: 0.08 ether}(address(1));
-        uint256 balanceSecondMint =
-            uint256(vm.load(address(editor), bytes32(slotBalance)));
+        uint256 balanceSecondMint = uint256(vm.load(address(editor), bytes32(slotBalance)));
         assertEq(balanceSecondMint, 2);
     }
 
     function testIncreaseTotalSupply(uint256 amount) public {
-        if (amount > editor.TOTAL_SUPPLY()) return;
+        if (amount > editor.TOTAL_SUPPLY()) {
+            return;
+        }
         uint256 prevSupply = editor.TOTAL_SUPPLY();
         editor.increaseTotalSupply(amount);
         assertEq(editor.TOTAL_SUPPLY(), prevSupply + amount);
@@ -84,12 +78,10 @@ contract TestEditor is PRBTest, Cheats {
     function testSafeContractReceiver() public {
         Receiver receiver = new Receiver();
         editor.mintTo{value: 0.08 ether}(address(receiver));
-        uint256 slotBalance = stdstore.target(address(editor)).sig(
-            editor.balanceOf.selector
-        ).with_key(address(receiver)).find();
+        uint256 slotBalance =
+            stdstore.target(address(editor)).sig(editor.balanceOf.selector).with_key(address(receiver)).find();
 
-        uint256 balance =
-            uint256(vm.load(address(editor), bytes32(slotBalance)));
+        uint256 balance = uint256(vm.load(address(editor), bytes32(slotBalance)));
         assertEq(balance, 1);
     }
 
@@ -127,12 +119,7 @@ contract TestEditor is PRBTest, Cheats {
 }
 
 contract Receiver is ERC721TokenReceiver {
-    function onERC721Received(address, address, uint256, bytes calldata)
-        external
-        pure
-        override
-        returns (bytes4)
-    {
+    function onERC721Received(address, address, uint256, bytes calldata) external pure override returns (bytes4) {
         return this.onERC721Received.selector;
     }
 }

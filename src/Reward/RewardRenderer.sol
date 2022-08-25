@@ -25,10 +25,7 @@ contract RewardRenderer {
         pure
         returns (string memory)
     {
-        Editor memory _editor =
-            Editor(_editorAddress, _editorUsername, _rewardDate, _position);
-        return string(
-            abi.encodePacked(_svgPartOne, _editor._editorUsername, _svgPartTwo)
-        );
+        Editor memory _editor = Editor(_editorAddress, _editorUsername, _rewardDate, _position);
+        return string(abi.encodePacked(_svgPartOne, _editor._editorUsername, _svgPartTwo));
     }
 }
