@@ -4,7 +4,8 @@ pragma solidity ^0.8.13;
 import {PRBTest} from "prb-test/PRBTest.sol";
 import {stdStorage, StdStorage} from "forge-std/Storage.sol";
 import {Cheats} from "forge-std/Cheats.sol";
-import {Editor, ERC721TokenReceiver} from "src/Editor/Editor.sol";
+import {Editor} from "src/Editor/Editor.sol";
+import {ERC721TokenReceiver} from "solmate/tokens/ERC721.sol";
 
 contract TestEditor is PRBTest, Cheats {
     using stdStorage for StdStorage;

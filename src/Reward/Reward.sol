@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity ^0.8.13;
 
-import {Base64} from "../Utils/Base64.sol";
-import {Strings} from "../Utils/Strings.sol";
+import {Base64} from "openzeppelin-contracts/contracts/utils/Base64.sol";
+import {Strings} from "openzeppelin-contracts/contracts/utils/Strings.sol";
 import {Owned} from "solmate/auth/Owned.sol";
 
 interface ERC721 {

@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity ^0.8.13;
 
-import {Strings} from "../Utils/Strings.sol";
-import {ERC721, ERC721TokenReceiver} from "solmate/tokens/ERC721.sol";
-import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
+import {Strings} from "openzeppelin-contracts/contracts/utils/Strings.sol";
+import {ERC721} from "solmate/tokens/ERC721.sol";
 import {Owned} from "solmate/auth/Owned.sol";
 
 contract Editor is ERC721, Owned {
