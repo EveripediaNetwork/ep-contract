@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import {IValidator} from "./IValidator.sol";
 
-contract EditorValidator is IValidator {
+contract EditorValidatorV2 is IValidator {
     /// -----------------------------------------------------------------------
     /// Errors
     /// -----------------------------------------------------------------------
@@ -47,7 +47,7 @@ contract EditorValidator is IValidator {
     }
 
     function isEditorWhitelisted(address editorAddress) external returns (bool) {
-       return whitelistedAddresses[editorAddress]; 
+        return whitelistedAddresses[editorAddress]; 
     }
 
     /// @notice Review that an editor can post a wiki based in previous edits
