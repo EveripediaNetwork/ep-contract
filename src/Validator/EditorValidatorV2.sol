@@ -10,6 +10,7 @@ contract EditorValidator is IValidator {
 
     error WrongIPFSLength();
     error ExceededEditLimit();
+    error EditorNotWhitelisted();
 
     /// -----------------------------------------------------------------------
     /// Storage variables
@@ -17,15 +18,46 @@ contract EditorValidator is IValidator {
 
     /// @dev fix before year 2106
     mapping(address => uint32[5]) edits;
+    address owner;
+    mapping(address => bool) whitelistedAddresses;
+
+    /// -----------------------------------------------------------------------
+    /// Constructor
+    /// -----------------------------------------------------------------------
+    
+    constructor() {
+        owner = msg.sender;
+    }
+
+    /// -----------------------------------------------------------------------
+    /// Modifiers
+    /// -----------------------------------------------------------------------
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Ownable: caller is not the owner.");
+        _;
+    }
 
     /// -----------------------------------------------------------------------
     /// External functions
     /// -----------------------------------------------------------------------
 
+    function whitelistEditor(address editorAddress) external onlyOwner {
+        whitelistedAddresses[editorAddress] = true;
+    }
+
+    function isEditorWhitelisted(address editorAddress) external returns (bool) {
+       return whitelistedAddresses[editorAddress]; 
+    }
+
     /// @notice Review that an editor can post a wiki based in previous edits
     /// @param _user The user to approve the module for
     /// @param _ipfs The IPFS Hash
     function validate(address _user, string calldata _ipfs) external returns (bool) {
+        if(!whitelistedAddresses[_user]) {
+            revert EditorNotWhitelisted();
+        }
+
         uint32[5] memory userEdits = edits[_user];
 
         if (userEdits[4] == 0) {
