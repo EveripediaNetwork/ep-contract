@@ -8,8 +8,11 @@ contract EditorValidatorV2 is IValidator {
     /// Errors
     /// -----------------------------------------------------------------------
 
+    /// The ipfs hash provided hash a wrong length
     error WrongIPFSLength();
+    /// The editor has reached the maximum edits allowed
     error ExceededEditLimit();
+    /// The address provided does not correspond to any whitelisted editor
     error EditorNotWhitelisted();
 
     /// -----------------------------------------------------------------------
