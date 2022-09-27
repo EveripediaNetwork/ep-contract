@@ -33,6 +33,7 @@ contract EditorValidatorV2 is IValidator {
     /// Modifiers
     /// -----------------------------------------------------------------------
 
+    /// @notice Check if the contract caller is the owner
     modifier onlyOwner() {
         require(msg.sender == owner, "Ownable: caller is not the owner.");
         _;
@@ -42,10 +43,14 @@ contract EditorValidatorV2 is IValidator {
     /// External functions
     /// -----------------------------------------------------------------------
 
+    /// @notice Add a new editor to the whitelist
+    /// @param editorAddress the address of the editor
     function whitelistEditor(address editorAddress) external onlyOwner {
         whitelistedAddresses[editorAddress] = true;
     }
 
+    /// @notice Check if the editor is whitelisted
+    /// @param editorAddress the address of the editor
     function isEditorWhitelisted(address editorAddress) external returns (bool) {
         return whitelistedAddresses[editorAddress]; 
     }
