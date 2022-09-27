@@ -51,7 +51,7 @@ contract EditorValidatorV2 is IValidator {
 
     /// @notice Check if the editor is whitelisted
     /// @param editorAddress the address of the editor
-    function isEditorWhitelisted(address editorAddress) external returns (bool) {
+    function isEditorWhitelisted(address editorAddress) external view returns (bool) {
         return whitelistedAddresses[editorAddress]; 
     }
 
