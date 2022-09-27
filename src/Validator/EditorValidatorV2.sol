@@ -101,6 +101,10 @@ contract EditorValidatorV2 is IValidator {
     }
 
     function getRemainEditsCount(address _user) external view returns (uint256) {
+        if(!whitelistedAddresses[_user]) {
+            revert EditorNotWhitelisted();
+        }
+
         uint32[5] memory userEdits = edits[_user];
         uint256 count = 0;
         for (uint256 i = 0; i < userEdits.length; ++i) {

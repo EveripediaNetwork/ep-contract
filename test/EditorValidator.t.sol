@@ -53,6 +53,10 @@ contract TestEditorValidator is PRBTest, Cheats {
         editorValidatorV2.validate(editor, "Qmb7Kc2r7oH6ff5VdvV97ynuv9uVNXPVppjiMvkGF98F6v");
     }
 
+    function testFailGetRemainEditsCount() public {
+        editorValidatorV2.getRemainEditsCount(editor);
+    }
+
     function testIsEditorWhitelistedWithoutRevert() public {
         editorValidatorV2.whitelistEditor(editor);
         editorValidatorV2.validate(editor, "Qmb7Kc2r7oH6ff5VdvV97ynuv9uVNXPVppjiMvkGF98F6v");
