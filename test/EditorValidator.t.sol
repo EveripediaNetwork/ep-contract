@@ -44,4 +44,16 @@ contract TestEditorValidator is PRBTest, Cheats {
         skip(1 days);
         assertEq(editorValidator.getRemainEditsCount(editor), 5);
     }
+
+    function testIsEditorWhitelisted() public {
+        vm.expectRevert(EditorValidator.EditorNotWhitelisted.selector);
+        editorValidator.validate(editor, "Qmb7Kc2r7oH6ff5VdvV97ynuv9uVNXPVppjiMvkGF98F6v");
+    }
+
+    function testIsEditorWhitelistedWithoutRevert() public {
+        editorValidator.whitelistEditor(editor);
+        editorValidator.validate(editor, "Qmb7Kc2r7oH6ff5VdvV97ynuv9uVNXPVppjiMvkGF98F6v");
+        bool isWhitelisted = editorValidator.isEditorWhitelisted(editor);
+        assertEq(isWhitelisted, true);
+    }
 }
