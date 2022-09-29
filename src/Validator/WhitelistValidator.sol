@@ -48,6 +48,12 @@ contract WhitelistValidator is IValidator {
         whitelistedAddresses[editorAddress] = true;
     }
 
+    /// @notice Delete a whitelisted editor
+    /// @param editorAddress the address of the editor
+    function unWhitelistEditor(address editorAddress) external onlyOwner {
+        delete whitelistedAddresses[editorAddress];
+    }
+
     /// @notice Check if the editor is whitelisted
     /// @param editorAddress the address of the editor
     function isEditorWhitelisted(address editorAddress) external view returns (bool) {

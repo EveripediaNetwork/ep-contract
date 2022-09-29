@@ -25,4 +25,15 @@ contract TestEditorValidator is PRBTest, Cheats {
         bool isWhitelisted = whitelistValidator.isEditorWhitelisted(editor);
         assertEq(isWhitelisted, true);
     }
+
+    function testUnWhitelistEditor() public {
+        whitelistValidator.whitelistEditor(editor);
+        bool isWhitelisted = whitelistValidator.isEditorWhitelisted(editor);
+        assertEq(isWhitelisted, true);
+
+        //
+        whitelistValidator.unWhitelistEditor(editor);
+        bool wasDeleted = whitelistValidator.isEditorWhitelisted(editor);
+        assertEq(wasDeleted, false);
+    }
 }
