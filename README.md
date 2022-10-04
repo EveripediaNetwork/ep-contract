@@ -36,6 +36,6 @@ Deploy and verify a contract
 source .env
 
 # To deploy and verify our contract
-forge script script/WikiNoValidator.s.sol:WikiNoValidator --rpc-url $RINKEBY_RPC_URL  --private-key $PRIVATE_KEY --broadcast --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --gas-price 60 --legacy
+forge script script/WikiNoValidator.s.sol:WikiNoValidator --rpc-url $RPC_URL  --private-key $PRIVATE_KEY --broadcast --verify --etherscan-api-key $ETHERSCAN_KEY -vvvv --gas-price 60 --legacy
 
 ```

@@ -47,11 +47,7 @@ contract IRewardRenderer {
         string memory _editorUsername,
         string memory _rewardDate,
         uint256 _position
-    )
-        public
-        pure
-        returns (string memory)
-    {}
+    ) public pure returns (string memory) {}
 }
 
 contract Reward is ERC721, Owned {

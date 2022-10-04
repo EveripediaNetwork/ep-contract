@@ -17,13 +17,13 @@ contract WhitelistValidator is IValidator {
     /// Storage variables
     /// -----------------------------------------------------------------------
 
-    address owner;
+    address public owner;
     mapping(address => bool) whitelistedAddresses;
 
     /// -----------------------------------------------------------------------
     /// Constructor
     /// -----------------------------------------------------------------------
-    
+
     constructor() {
         owner = msg.sender;
     }
@@ -54,17 +54,17 @@ contract WhitelistValidator is IValidator {
         delete whitelistedAddresses[editorAddress];
     }
 
-    /// @notice Check if the editor is whitelisted
-    /// @param editorAddress the address of the editor
-    function isEditorWhitelisted(address editorAddress) external view returns (bool) {
-        return whitelistedAddresses[editorAddress]; 
+    /// @notice Set owner to a different address
+    /// @param newOwner the address of the new owner
+    function setOwner(address newOwner) external onlyOwner {
+        owner = newOwner;
     }
 
     /// @notice Review that an editor can post a wiki based in previous edits
     /// @param _user The user to approve the module for
     /// @param _ipfs The IPFS Hash
     function validate(address _user, string calldata _ipfs) external returns (bool) {
-        if(!whitelistedAddresses[_user]) {
+        if (!whitelistedAddresses[_user]) {
             revert EditorNotWhitelisted();
         }
 
@@ -73,5 +73,15 @@ contract WhitelistValidator is IValidator {
             revert WrongIPFSLength();
         }
         return true;
+    }
+
+    /// -----------------------------------------------------------------------
+    /// View functions
+    /// -----------------------------------------------------------------------
+
+    /// @notice Check if the editor is whitelisted
+    /// @param editorAddress the address of the editor
+    function isEditorWhitelisted(address editorAddress) external view returns (bool) {
+        return whitelistedAddresses[editorAddress];
     }
 }

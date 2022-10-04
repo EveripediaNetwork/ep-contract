@@ -36,4 +36,13 @@ contract TestEditorValidator is PRBTest, Cheats {
         bool wasDeleted = whitelistValidator.isEditorWhitelisted(editor);
         assertEq(wasDeleted, false);
     }
+
+    function testSetOwner() public {
+        assertEq(whitelistValidator.owner(), address(this));
+        whitelistValidator.setOwner(editor);
+        assertEq(whitelistValidator.owner(), editor);
+
+        vm.expectRevert("Ownable: caller is not the owner.");
+        whitelistValidator.setOwner(editor);
+    }
 }
