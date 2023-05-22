@@ -7,7 +7,15 @@ import {Owned} from "solmate/auth/Owned.sol";
 import {SafeMath} from "openzeppelin-contracts/contracts/utils/math/SafeMath.sol";
 
 interface IERC20 {
+    function transferFrom(
+        address from,
+        address to,
+        uint256 amount
+    ) external returns (bool);
+
     function transfer(address to, uint256 amount) external returns (bool);
+
+    function balanceOf(address account) external view returns (uint256);
 }
 
 /// @title BRAIN Pass NFT
@@ -20,6 +28,8 @@ contract BrainPassCollectibles is ERC721, Owned {
     /// -----------------------------------------------------------------------
 
     error MintingPaymentFailed();
+    error IncreseTimePaymentFailed();
+    error UserBalanceNotEnough();
 
     /// -----------------------------------------------------------------------
     ///  Inheritances
@@ -58,7 +68,7 @@ contract BrainPassCollectibles is ERC721, Owned {
     /// -----------------------------------------------------------------------
     /// Constant
     /// -----------------------------------------------------------------------
-    IERC20 public IqToken;
+    address public IqToken;
 
     /// -----------------------------------------------------------------------
     /// Variables
@@ -72,14 +82,14 @@ contract BrainPassCollectibles is ERC721, Owned {
     constructor(
         address IqAddr
     ) ERC721("BRAINY EDITOR PASS", "BEP") Owned(msg.sender) {
-        IqToken = IERC20(IqAddr);
+        IqToken =IqAddr;
     }
 
     function baseURI() internal view virtual returns (string memory) {
         return baseTokenURI;
     }
 
-    function setBaseURI(string memory tokenURI) public onlyOwner {
+    function setBaseURI(string memory tokenURI) internal {
         baseTokenURI = tokenURI;
     }
 
@@ -115,7 +125,7 @@ contract BrainPassCollectibles is ERC721, Owned {
         uint256 passId,
         uint256 startTimestamp,
         uint256 endTimestamp
-    ) public payable {
+    ) public {
         require(
             addressToPassId[msg.sender][passId] != true,
             "Max NFTs per address reached"
@@ -131,12 +141,14 @@ contract BrainPassCollectibles is ERC721, Owned {
         );
 
         uint256 price = calculatePrice(passId, startTimestamp, endTimestamp);
-        require(msg.value >= price, "Not enough payment token");
 
-        uint256 tokenId = passType.lastTokenIdMinted.add(1);
-        bool success = IqToken.transfer(owner, price);
+        if (IERC20(IqToken).balanceOf(msg.sender) < price)
+            revert UserBalanceNotEnough();
+
+        bool success = IERC20(IqToken).transferFrom(msg.sender, owner, 1e18);
         if (!success) revert MintingPaymentFailed();
 
+        uint256 tokenId = passType.lastTokenIdMinted + 1;
         setBaseURI(passType.tokenURI);
         _safeMint(msg.sender, tokenId);
 
@@ -186,7 +198,7 @@ contract BrainPassCollectibles is ERC721, Owned {
         uint256 passIdNum,
         uint newStartTime,
         uint256 newEndTime
-    ) public payable {
+    ) public {
         require(
             msg.sender == ownerOf(tokenId),
             "You cannot increase the time for an NFT you don't own"
@@ -194,7 +206,8 @@ contract BrainPassCollectibles is ERC721, Owned {
 
         UserPassItem storage pass = addressToNFTPass[ownerOf(tokenId)][tokenId];
         uint256 price = calculatePrice(passIdNum, newStartTime, newEndTime);
-        require(msg.value >= price, "Not enough payment token");
+        bool success = IERC20(IqToken).transferFrom(msg.sender, owner, price);
+        if (!success) revert IncreseTimePaymentFailed();
 
         pass.startTimestamp = newStartTime;
         pass.endTimestamp = newEndTime;
