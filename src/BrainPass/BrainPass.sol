@@ -2,17 +2,19 @@
 pragma solidity ^0.8.13;
 
 import "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
-import "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
-import "openzeppelin-contracts/contracts/utils/Counters.sol";
-import "openzeppelin-contracts/contracts/access/Ownable.sol";
-import "openzeppelin-contracts/contracts/utils/math/SafeMath.sol";
+import {Counters} from "openzeppelin-contracts/contracts/utils/Counters.sol";
+import {Owned} from "solmate/auth/Owned.sol";
+import {SafeMath} from "openzeppelin-contracts/contracts/utils/math/SafeMath.sol";
 
+interface IERC20 {
+    function transfer(address to, uint256 amount) external returns (bool);
+}
 
 /// @title BRAIN Pass NFT
 /// @author Oleanji
 /// @notice A pass for IQ Wiki Editors
 
-contract BrainPassCollectibles is ERC721, Ownable {
+contract BrainPassCollectibles is ERC721, Owned {
     /// -----------------------------------------------------------------------
     /// Errors
     /// -----------------------------------------------------------------------
@@ -29,20 +31,20 @@ contract BrainPassCollectibles is ERC721, Ownable {
     /// Structs
     /// -----------------------------------------------------------------------
     struct UserPassItem {
-        uint256 _tokenId;
-        uint256 _passId;
-        uint256 _startTimestamp;
-        uint256 _endTimestamp;
+        uint256 tokenId;
+        uint256 passId;
+        uint256 startTimestamp;
+        uint256 endTimestamp;
     }
 
     struct PassType {
-        uint256 _passId;
-        string _passSlug;
-        uint256 _pricePerDays;
-        string _tokenURI;
-        uint256 _maxTokens;
-        uint256 _discount;
-        uint256 _lastTokenIdMinted;
+        uint256 passId;
+        string passSlug;
+        uint256 pricePerDays;
+        string tokenURI;
+        uint256 maxTokens;
+        uint256 discount;
+        uint256 lastTokenIdMinted;
     }
 
     /// -----------------------------------------------------------------------
@@ -51,7 +53,6 @@ contract BrainPassCollectibles is ERC721, Ownable {
     mapping(uint256 => PassType) public passTypes;
     mapping(address => mapping(uint256 => UserPassItem))
         public addressToNFTPass;
-
     mapping(address => mapping(uint256 => bool)) public addressToPassId;
 
     /// -----------------------------------------------------------------------
@@ -63,121 +64,120 @@ contract BrainPassCollectibles is ERC721, Ownable {
     /// Variables
     /// -----------------------------------------------------------------------
     string public baseTokenURI;
-    Counters.Counter private _tokenIds;
+    Counters.Counter private tokenIds;
 
     /// -----------------------------------------------------------------------
     /// Constructor
     /// -----------------------------------------------------------------------
-    constructor(address _IqAddr) ERC721("BRAINY EDITOR PASS", "BEP") {
-        IqToken = IERC20(_IqAddr);
+    constructor(
+        address IqAddr
+    ) ERC721("BRAINY EDITOR PASS", "BEP") Owned(msg.sender) {
+        IqToken = IERC20(IqAddr);
     }
 
-    function _baseURI() internal view virtual override returns (string memory) {
+    function baseURI() internal view virtual returns (string memory) {
         return baseTokenURI;
     }
 
-    function setBaseURI(string memory _baseTokenURI) public onlyOwner {
-        baseTokenURI = _baseTokenURI;
+    function setBaseURI(string memory tokenURI) public onlyOwner {
+        baseTokenURI = tokenURI;
     }
 
+    /// @notice Add a new Pass Type
+    /// @param passId and others are the details needed for a passType
     function addPassType(
-        uint256 _passId,
-        uint256 _pricePerDays,
-        string memory _tokenURI,
-        string memory _passSlug,
-        uint256 _maxTokens,
-        uint256 _discount
+        uint256 passId,
+        uint256 pricePerDays,
+        string memory tokenURI,
+        string memory passSlug,
+        uint256 maxTokens,
+        uint256 discount
     ) public onlyOwner {
-        require(bytes(_tokenURI).length > 0, "Invalid token URI");
-        require(_maxTokens > 0, "Invalid max tokens");
+        require(bytes(tokenURI).length > 0, "Invalid token URI");
+        require(maxTokens > 0, "Invalid max tokens");
 
-        passTypes[_passId] = PassType(
-            _passId,
-            _passSlug,
-            _pricePerDays,
-            _tokenURI,
-            _maxTokens,
-            _discount,
+        passTypes[passId] = PassType(
+            passId,
+            passSlug,
+            pricePerDays,
+            tokenURI,
+            maxTokens,
+            discount,
             0
         );
 
-        emit NewPassAdded(_passId, _passSlug, _maxTokens, _pricePerDays);
+        emit NewPassAdded(passId, passSlug, maxTokens, pricePerDays);
     }
 
+    /// @notice Mint and NFT of a particular passtype
+    /// @param passIdNum The id of the passtype to mint
     function mintNFT(
-        uint256 _passIdNum,
-        uint256 _startTimestamp,
-        uint256 _endTimestamp
+        uint256 passIdNum,
+        uint256 startTimestamp,
+        uint256 endTimestamp
     ) public payable {
         require(
-            addressToPassId[msg.sender][_passIdNum] != true,
+            addressToPassId[msg.sender][passIdNum] != true,
             "Max NFTs per address reached"
         );
 
-        PassType storage passType = passTypes[_passIdNum];
+        PassType storage passType = passTypes[passIdNum];
 
-        require(passType._maxTokens != 0, "Pass type not found");
+        require(passType.maxTokens != 0, "Pass type not found");
 
         require(
-            passType._lastTokenIdMinted.add(1) <= passType._maxTokens,
+            passType.lastTokenIdMinted.add(1) <= passType.maxTokens,
             "Max supply reached"
         );
 
-        uint256 price = calculatePrice(
-            _passIdNum,
-            _startTimestamp,
-            _endTimestamp
-        );
+        uint256 price = calculatePrice(passIdNum, startTimestamp, endTimestamp);
         require(msg.value >= price, "Not enough payment token");
 
-        uint256 tokenId = passType._lastTokenIdMinted;
-        bool success = IqToken.transfer(owner(), price);
+        uint256 tokenId = passType.lastTokenIdMinted;
+        bool success = IqToken.transfer(owner, price);
         if (!success) revert MintingPaymentFailed();
 
-        setBaseURI(passType._tokenURI);
+        setBaseURI(passType.tokenURI);
         _safeMint(msg.sender, tokenId);
 
         UserPassItem memory purchase = UserPassItem(
             tokenId,
-            _passIdNum,
-            _startTimestamp,
-            _endTimestamp
+            passIdNum,
+            startTimestamp,
+            endTimestamp
         );
-        addressToPassId[msg.sender][_passIdNum] = true;
+        addressToPassId[msg.sender][passIdNum] = true;
         addressToNFTPass[msg.sender][tokenId] = purchase;
-        passType._lastTokenIdMinted = tokenId += 1;
+        passType.lastTokenIdMinted = tokenId += 1;
 
-        emit BrainPassBought(
-            msg.sender,
-            tokenId,
-            _startTimestamp,
-            _endTimestamp
-        );
+        emit BrainPassBought(msg.sender, tokenId, startTimestamp, endTimestamp);
     }
 
+    /// @notice Calculate the price of an Nft
+    /// @param startTimestamp and endTimestamp are used to calc the price to be paid
     function calculatePrice(
-        uint256 _passIdNum,
-        uint256 _startTimestamp,
-        uint256 _endTimestamp
+        uint256 passIdNum,
+        uint256 startTimestamp,
+        uint256 endTimestamp
     ) public view returns (uint256) {
-        PassType memory passType = passTypes[_passIdNum];
-        uint256 duration = _endTimestamp.sub(_startTimestamp);
-        uint256 totalPrice = duration.mul(passType._pricePerDays);
-        if (passType._discount > 0) {
-            uint256 discountAmount = totalPrice.mul(passType._discount).div(
-                100
-            );
+        PassType memory passType = passTypes[passIdNum];
+        uint256 duration = endTimestamp.sub(startTimestamp);
+        uint256 totalPrice = duration.mul(passType.pricePerDays);
+        if (passType.discount > 0) {
+            uint256 discountAmount = totalPrice.mul(passType.discount).div(100);
             totalPrice = totalPrice.sub(discountAmount);
         }
 
         return totalPrice;
     }
 
+    /// @notice Increase the time to hold a PassNft
+    /// @param tokenId The Id of the NFT whose time is to be increased
     function increasePassTime(
         uint256 tokenId,
-        uint256 _passIdNum,
-        uint _newStartTime,
-        uint256 _newEndTime
+        uint256 passIdNum,
+        uint newStartTime,
+        uint256 newEndTime
     ) public payable {
         require(
             msg.sender == ownerOf(tokenId),
@@ -185,30 +185,32 @@ contract BrainPassCollectibles is ERC721, Ownable {
         );
 
         UserPassItem storage pass = addressToNFTPass[ownerOf(tokenId)][tokenId];
-        uint256 price = calculatePrice(_passIdNum, _newStartTime, _newEndTime);
+        uint256 price = calculatePrice(passIdNum, newStartTime, newEndTime);
         require(msg.value >= price, "Not enough payment token");
 
-        pass._startTimestamp = _newStartTime;
-        pass._endTimestamp = _newEndTime;
+        pass.startTimestamp = newStartTime;
+        pass.endTimestamp = newEndTime;
 
         emit TimeIncreased(
             msg.sender,
             tokenId,
-            pass._startTimestamp,
-            pass._endTimestamp
+            pass.startTimestamp,
+            pass.endTimestamp
         );
     }
 
+    /// @notice Gets all the NFT owned by an address
+    /// @param user The address of the user
     function getUserNFTs(
-        address _user,
-        uint _passIdNum
+        address user,
+        uint passIdNum
     ) public view returns (UserPassItem[] memory) {
-        uint256 userTokenCount = balanceOf(_user);
-        PassType memory passType = passTypes[_passIdNum];
+        uint256 userTokenCount = balanceOf(user);
+        PassType memory passType = passTypes[passIdNum];
         UserPassItem[] memory userTokens = new UserPassItem[](userTokenCount);
         uint256 counter = 0;
-        for (uint256 i = 0; i < passType._maxTokens; i++) {
-            if (ownerOf(i) == _user) {
+        for (uint256 i = 0; i < passType.maxTokens; i++) {
+            if (ownerOf(i) == user) {
                 userTokens[counter] = addressToNFTPass[msg.sender][i];
                 counter++;
             }
@@ -216,13 +218,16 @@ contract BrainPassCollectibles is ERC721, Ownable {
         return userTokens;
     }
 
-    function getPassType(
-        uint256 _passId
+    /// @notice Gets all the details of a passtype
+    /// @param passId The id of the passtype
+    function getAllPassType(
+        uint256 passId
     ) public view returns (PassType memory) {
-        PassType memory passType = passTypes[_passId];
+        PassType memory passType = passTypes[passId];
         return (passType);
     }
 
+    /// @notice Withdraws any amount in the contract
     function withdraw() public payable onlyOwner {
         uint256 balance = address(this).balance;
         require(balance > 0, "No ether left to withdraw");
