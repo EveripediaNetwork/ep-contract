@@ -39,8 +39,8 @@ contract BrainPassCollectibles is ERC721, Owned {
 
     struct PassType {
         uint256 passId;
-        string passSlug;
-        uint256 pricePerDays;
+        string name;
+        uint256 pricePerDay;
         string tokenURI;
         uint256 maxTokens;
         uint256 discount;
@@ -87,9 +87,9 @@ contract BrainPassCollectibles is ERC721, Owned {
     /// @param passId and others are the details needed for a passType
     function addPassType(
         uint256 passId,
-        uint256 pricePerDays,
+        uint256 pricePerDay,
         string memory tokenURI,
-        string memory passSlug,
+        string memory name,
         uint256 maxTokens,
         uint256 discount
     ) public onlyOwner {
@@ -98,30 +98,30 @@ contract BrainPassCollectibles is ERC721, Owned {
 
         passTypes[passId] = PassType(
             passId,
-            passSlug,
-            pricePerDays,
+            name,
+            pricePerDay,
             tokenURI,
             maxTokens,
             discount,
             0
         );
 
-        emit NewPassAdded(passId, passSlug, maxTokens, pricePerDays);
+        emit NewPassAdded(passId, name, maxTokens, pricePerDay);
     }
 
     /// @notice Mint and NFT of a particular passtype
-    /// @param passIdNum The id of the passtype to mint
+    /// @param passId The id of the passtype to mint
     function mintNFT(
-        uint256 passIdNum,
+        uint256 passId,
         uint256 startTimestamp,
         uint256 endTimestamp
     ) public payable {
         require(
-            addressToPassId[msg.sender][passIdNum] != true,
+            addressToPassId[msg.sender][passId] != true,
             "Max NFTs per address reached"
         );
 
-        PassType storage passType = passTypes[passIdNum];
+        PassType storage passType = passTypes[passId];
 
         require(passType.maxTokens != 0, "Pass type not found");
 
@@ -130,39 +130,47 @@ contract BrainPassCollectibles is ERC721, Owned {
             "Max supply reached"
         );
 
-        uint256 price = calculatePrice(passIdNum, startTimestamp, endTimestamp);
+        uint256 price = calculatePrice(passId, startTimestamp, endTimestamp);
         require(msg.value >= price, "Not enough payment token");
 
-        uint256 tokenId = passType.lastTokenIdMinted;
+        uint256 tokenId = passType.lastTokenIdMinted.add(1);
         bool success = IqToken.transfer(owner, price);
         if (!success) revert MintingPaymentFailed();
 
         setBaseURI(passType.tokenURI);
         _safeMint(msg.sender, tokenId);
 
+        addressToPassId[msg.sender][passId] = true;
+
         UserPassItem memory purchase = UserPassItem(
             tokenId,
-            passIdNum,
+            passId,
             startTimestamp,
             endTimestamp
         );
-        addressToPassId[msg.sender][passIdNum] = true;
         addressToNFTPass[msg.sender][tokenId] = purchase;
-        passType.lastTokenIdMinted = tokenId += 1;
+        passType.lastTokenIdMinted = tokenId;
 
-        emit BrainPassBought(msg.sender, tokenId, startTimestamp, endTimestamp);
+        emit BrainPassBought(
+            msg.sender,
+            tokenId,
+            passId,
+            startTimestamp,
+            endTimestamp
+        );
     }
 
     /// @notice Calculate the price of an Nft
     /// @param startTimestamp and endTimestamp are used to calc the price to be paid
     function calculatePrice(
-        uint256 passIdNum,
+        uint256 passId,
         uint256 startTimestamp,
         uint256 endTimestamp
     ) public view returns (uint256) {
-        PassType memory passType = passTypes[passIdNum];
+        PassType memory passType = passTypes[passId];
+        //duration in days
         uint256 duration = endTimestamp.sub(startTimestamp);
-        uint256 totalPrice = duration.mul(passType.pricePerDays);
+        uint256 totalPrice = duration.mul(passType.pricePerDay);
         if (passType.discount > 0) {
             uint256 discountAmount = totalPrice.mul(passType.discount).div(100);
             totalPrice = totalPrice.sub(discountAmount);
@@ -241,6 +249,7 @@ contract BrainPassCollectibles is ERC721, Owned {
 
     event BrainPassBought(
         address indexed _owner,
+        uint256 _passId,
         uint256 _tokenId,
         uint256 _startTimestamp,
         uint256 _endTimestamp
@@ -255,8 +264,8 @@ contract BrainPassCollectibles is ERC721, Owned {
 
     event NewPassAdded(
         uint256 indexed _passId,
-        string _passSlug,
+        string _name,
         uint256 _maxtokens,
-        uint256 _pricePerDays
+        uint256 _pricePerDay
     );
 }
