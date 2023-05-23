@@ -12,10 +12,6 @@ interface IERC20 {
         address to,
         uint256 amount
     ) external returns (bool);
-
-    function transfer(address to, uint256 amount) external returns (bool);
-
-    function balanceOf(address account) external view returns (uint256);
 }
 
 /// @title BRAIN Pass NFT
@@ -84,12 +80,12 @@ contract BrainPassCollectibles is ERC721, Owned {
         IqToken = IqAddr;
     }
 
+    /// -----------------------------------------------------------------------
+    /// External functions
+    /// -----------------------------------------------------------------------
+
     function _baseURI() internal view virtual override returns (string memory) {
         return baseTokenURI;
-    }
-
-    function setBaseURI(string memory tokenURI) internal {
-        baseTokenURI = tokenURI;
     }
 
     /// @notice Add a new Pass Type
@@ -100,7 +96,7 @@ contract BrainPassCollectibles is ERC721, Owned {
         string memory name,
         uint256 maxTokens,
         uint256 discount
-    ) public onlyOwner {
+    ) external onlyOwner {
         require(bytes(tokenURI).length > 0, "Invalid token URI");
         require(maxTokens > 0, "Invalid max tokens");
         uint256 passId = passIds.current();
@@ -125,7 +121,7 @@ contract BrainPassCollectibles is ERC721, Owned {
         uint256 passId,
         uint256 startTimestamp,
         uint256 endTimestamp
-    ) public {
+    ) external {
         require(
             addressToPassId[msg.sender][passId] != true,
             "Max NFTs per address reached"
@@ -169,36 +165,13 @@ contract BrainPassCollectibles is ERC721, Owned {
         );
     }
 
-    /// @notice Calculate the price of an Nft
-    /// @param startTimestamp and endTimestamp are used to calc the price to be paid
-    function calculatePrice(
-        uint256 passId,
-        uint256 startTimestamp,
-        uint256 endTimestamp
-    ) public view returns (uint256) {
-        PassType memory passType = passTypes[passId];
-        uint256 duration = endTimestamp.sub(startTimestamp);
-
-        uint256 subscriptionPeriodInDays = duration.div(SecondsInADay);
-
-        // Calculate the total price
-        uint256 totalPrice = subscriptionPeriodInDays.mul(passType.pricePerDay);
-
-        if (passType.discount > 0) {
-            uint256 discountAmount = totalPrice.mul(passType.discount).div(100);
-            totalPrice = totalPrice.sub(discountAmount);
-        }
-
-        return totalPrice * 1e18;
-    }
-
     /// @notice Increase the time to hold a PassNft
     /// @param tokenId The Id of the NFT whose time is to be increased
     function increasePassTime(
         uint256 tokenId,
         uint newStartTime,
         uint256 newEndTime
-    ) public {
+    ) external {
         require(
             msg.sender == ownerOf(tokenId),
             "You cannot increase the time for an NFT you don't own"
@@ -221,6 +194,45 @@ contract BrainPassCollectibles is ERC721, Owned {
         );
     }
 
+    /// @notice Withdraws any amount in the contract
+    function withdraw() external payable onlyOwner {
+        uint256 balance = address(this).balance;
+        require(balance > 0, "No ether left to withdraw");
+        (bool success, ) = (msg.sender).call{value: balance}("");
+        require(success, "Transfer failed.");
+    }
+
+    /// -----------------------------------------------------------------------
+    /// Internal Functions
+    /// -----------------------------------------------------------------------
+
+    /// @notice Calculate the price of an Nft
+    /// @param startTimestamp and endTimestamp are used to calc the price to be paid
+    function calculatePrice(
+        uint256 passId,
+        uint256 startTimestamp,
+        uint256 endTimestamp
+    ) internal view returns (uint256) {
+        PassType memory passType = passTypes[passId];
+        uint256 duration = endTimestamp.sub(startTimestamp);
+
+        uint256 subscriptionPeriodInDays = duration.div(SecondsInADay);
+
+        // Calculate the total price
+        uint256 totalPrice = subscriptionPeriodInDays.mul(passType.pricePerDay);
+
+        if (passType.discount > 0) {
+            uint256 discountAmount = totalPrice.mul(passType.discount).div(100);
+            totalPrice = totalPrice.sub(discountAmount);
+        }
+
+        return totalPrice * 1e18;
+    }
+
+    /// -----------------------------------------------------------------------
+    /// Getters
+    /// -----------------------------------------------------------------------
+
     /// @notice Gets all the NFT owned by an address
     /// @param user The address of the user
     function getUserPassDetails(
@@ -239,7 +251,7 @@ contract BrainPassCollectibles is ERC721, Owned {
     }
 
     /// @notice Gets all the PassType created
-    function getAllPassType() public view returns (PassType[] memory) {
+    function getAllPassType() external view returns (PassType[] memory) {
         uint256 total = passIds.current();
         PassType[] memory passType = new PassType[](total);
         for (uint256 i = 0; i < total; i++) {
@@ -250,17 +262,18 @@ contract BrainPassCollectibles is ERC721, Owned {
 
     /// @notice Gets all the details of a passtype
     /// @param passId The id of the passtype
-    function getPassType(uint256 passId) public view returns (PassType memory) {
+    function getPassType(
+        uint256 passId
+    ) external view returns (PassType memory) {
         PassType memory passType = passTypes[passId];
         return (passType);
     }
 
-    /// @notice Withdraws any amount in the contract
-    function withdraw() public payable onlyOwner {
-        uint256 balance = address(this).balance;
-        require(balance > 0, "No ether left to withdraw");
-        (bool success, ) = (msg.sender).call{value: balance}("");
-        require(success, "Transfer failed.");
+    /// -----------------------------------------------------------------------
+    /// Setters
+    /// -----------------------------------------------------------------------
+    function setBaseURI(string memory tokenURI) internal {
+        baseTokenURI = tokenURI;
     }
 
     /// -----------------------------------------------------------------------
