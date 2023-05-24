@@ -71,7 +71,7 @@ Call the `mintNFT` function with the following parameters:
 - The payment is in IQ Token
 
 ### Increasing Pass Time
-
+This function is ued to increase the duration for which a pass is owned for.
 Call the `increasePassTime` function with the following parameters:
 - `tokenId`: The ID of the NFT whose time should be increased.
 - `newStartTime`: The new start timestamp for the pass.
@@ -92,8 +92,7 @@ Call the `getPassType` function with the following parameters:
 - `passId`: The ID of the pass type.
 
 ### Withdraw Ether
-
-Only the contract owner can call the `withdraw` function to withdraw any amount of Ether stored in the contract.
+Only the contract owner can call the `withdraw` function to withdraw any amount of Ether stored in the contract. 
 
 ## Events
 

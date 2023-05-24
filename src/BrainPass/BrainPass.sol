@@ -33,6 +33,7 @@ contract BrainPassCollectibles is ERC721, Owned {
     error PassMaxSupplyReached();
     error NoEtherLeftToWithdraw();
     error TransferFailed();
+    error DurationNotInTimeFrame();
 
     /// -----------------------------------------------------------------------
     ///  Inheritances
@@ -73,6 +74,8 @@ contract BrainPassCollectibles is ERC721, Owned {
     /// -----------------------------------------------------------------------
     address public immutable iqToken;
     uint256 immutable SECONDS_IN_A_DAY = 86400;
+    uint256 immutable DAYS_MINT_LOWER_LIMIT = 28;
+    uint256 immutable DAYS_MINT_UPPER_LIMIT = 365;
 
     /// -----------------------------------------------------------------------
     /// Variables
@@ -134,6 +137,8 @@ contract BrainPassCollectibles is ERC721, Owned {
         if (passType.lastTokenIdMinted.add(1) >= passType.maxTokens)
             revert PassMaxSupplyReached();
 
+        if (!validatePassDuration(startTimestamp, endTimestamp)) revert DurationNotInTimeFrame();
+
         uint256 price = calculatePrice(passId, startTimestamp, endTimestamp);
 
         bool success = IERC20(iqToken).transferFrom(msg.sender, owner, price);
@@ -163,6 +168,7 @@ contract BrainPassCollectibles is ERC721, Owned {
         );
     }
 
+
     /// @notice Increase the time to hold a PassNft
     /// @param tokenId The Id of the NFT whose time is to be increased
     function increasePassTime(
@@ -177,9 +183,13 @@ contract BrainPassCollectibles is ERC721, Owned {
 
         bool success = IERC20(iqToken).transferFrom(msg.sender, owner, price);
         if (!success) revert IncreseTimePaymentFailed();
-
-        pass.startTimestamp = newStartTime;
-        pass.endTimestamp = newEndTime;
+      
+        if(block.timestamp > pass.endTimestamp){ //not active 
+            pass.startTimestamp = newStartTime; // new start time
+            pass.endTimestamp = newEndTime; //new end time
+        }else {//active 
+            pass.endTimestamp = newEndTime; //new endtime
+        }
 
         emit TimeIncreased(
             msg.sender,
@@ -222,6 +232,18 @@ contract BrainPassCollectibles is ERC721, Owned {
         }
 
         return totalPrice * 1e18;
+    }
+
+    /// @notice Validates the Timestamp Duration for minting Nft
+    /// @param startTimestamp and endTimestamp are used to check if the duration is within the subscription timeframe
+    function validatePassDuration(uint256 startTimestamp, uint256 endTimestamp) internal pure returns(bool){
+        uint256 durationInDays = (endTimestamp.sub(startTimestamp)) / SECONDS_IN_A_DAY;
+    
+        if (durationInDays >= DAYS_MINT_LOWER_LIMIT && durationInDays<= DAYS_MINT_UPPER_LIMIT) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /// -----------------------------------------------------------------------

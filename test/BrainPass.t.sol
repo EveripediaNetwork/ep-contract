@@ -76,6 +76,7 @@ contract TestEditor is PRBTest, Cheats {
         uint256 _tokenId = brainPass.getUserPassDetails(alice, 0).tokenId;
         assertEq(_tokenId, 1);
         brainPass.increasePassTime(_tokenId, 518400, 864000);
+        assertEq(mockERC20.balanceOf(address(this)), 120e18);
         brainPass.addressToNFTPass(alice, _tokenId);
         uint _startTime = brainPass.getUserPassDetails(alice, 0).startTimestamp;
         assertEq(_startTime, 518400);
