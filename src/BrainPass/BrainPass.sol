@@ -29,6 +29,10 @@ contract BrainPassCollectibles is ERC721, Owned {
     error MaxPassNFTsReached();
     error NotTheOwnerOfThisNft();
     error InvalidMaxTokensForAPass();
+    error PassTypeNotFound();
+    error PassMaxSupplyReached();
+    error NoEtherLeftToWithdraw();
+    error TransferFailed();
 
     /// -----------------------------------------------------------------------
     ///  Inheritances
@@ -67,8 +71,8 @@ contract BrainPassCollectibles is ERC721, Owned {
     /// -----------------------------------------------------------------------
     /// Constant
     /// -----------------------------------------------------------------------
-    address public IqToken;
-    uint256 SecondsInADay = 86400;
+    address public immutable iqToken;
+    uint256 immutable SECONDS_IN_A_DAY = 86400;
 
     /// -----------------------------------------------------------------------
     /// Variables
@@ -80,7 +84,7 @@ contract BrainPassCollectibles is ERC721, Owned {
     /// Constructor
     /// -----------------------------------------------------------------------
     constructor(address IqAddr) ERC721("BAINPASS", "BEP") Owned(msg.sender) {
-        IqToken = IqAddr;
+        iqToken = IqAddr;
     }
 
     /// -----------------------------------------------------------------------
@@ -126,16 +130,13 @@ contract BrainPassCollectibles is ERC721, Owned {
 
         PassType storage passType = passTypes[passId];
 
-        require(passType.maxTokens != 0, "Pass type not found");
-
-        require(
-            passType.lastTokenIdMinted.add(1) <= passType.maxTokens,
-            "Max supply reached"
-        );
+        if (passType.maxTokens == 0) revert PassTypeNotFound();
+        if (passType.lastTokenIdMinted.add(1) >= passType.maxTokens)
+            revert PassMaxSupplyReached();
 
         uint256 price = calculatePrice(passId, startTimestamp, endTimestamp);
 
-        bool success = IERC20(IqToken).transferFrom(msg.sender, owner, price);
+        bool success = IERC20(iqToken).transferFrom(msg.sender, owner, price);
         if (!success) revert MintingPaymentFailed();
 
         uint256 tokenId = passType.lastTokenIdMinted + 1;
@@ -174,7 +175,7 @@ contract BrainPassCollectibles is ERC721, Owned {
         UserPassItem storage pass = addressToNFTPass[msg.sender][tokenId];
         uint256 price = calculatePrice(pass.passId, newStartTime, newEndTime);
 
-        bool success = IERC20(IqToken).transferFrom(msg.sender, owner, price);
+        bool success = IERC20(iqToken).transferFrom(msg.sender, owner, price);
         if (!success) revert IncreseTimePaymentFailed();
 
         pass.startTimestamp = newStartTime;
@@ -191,9 +192,9 @@ contract BrainPassCollectibles is ERC721, Owned {
     /// @notice Withdraws any amount in the contract
     function withdraw() external payable onlyOwner {
         uint256 balance = address(this).balance;
-        require(balance > 0, "No ether left to withdraw");
+        if (balance <= 0) revert NoEtherLeftToWithdraw();
         (bool success, ) = (msg.sender).call{value: balance}("");
-        require(success, "Transfer failed.");
+        if (!success) revert TransferFailed();
     }
 
     /// -----------------------------------------------------------------------
@@ -210,7 +211,7 @@ contract BrainPassCollectibles is ERC721, Owned {
         PassType memory passType = passTypes[passId];
         uint256 duration = endTimestamp.sub(startTimestamp);
 
-        uint256 subscriptionPeriodInDays = duration.div(SecondsInADay);
+        uint256 subscriptionPeriodInDays = duration.div(SECONDS_IN_A_DAY);
 
         // Calculate the total price
         uint256 totalPrice = subscriptionPeriodInDays.mul(passType.pricePerDay);

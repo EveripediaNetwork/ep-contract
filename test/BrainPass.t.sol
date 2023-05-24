@@ -99,5 +99,5 @@ contract TestEditor is PRBTest, Cheats {
         assertEq(brainPass.getAllPassType().length, 2);
     }
 
-    //todo : upgrade /downgrade after subscription has ended, Errors
+    //todo : upgrade /downgrade after subscription has ended
 }
