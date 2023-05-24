@@ -102,4 +102,6 @@ The contract emits the following events:
 - `TimeIncreased`: Emitted when the time of a BrainPass NFT is increased.
 - `NewPassAdded`: Emitted when a new pass type is added.
 
+## PICTORAL EXPLANATION
+![image](https://github.com/EveripediaNetwork/ep-contract/assets/75235148/eee4d631-28d9-4ca4-bc0e-62e5a02998a2)
 
