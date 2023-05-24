@@ -48,6 +48,7 @@ contract TestEditor is PRBTest, Cheats {
         assertEq(brainPass.balanceOf(alice), 0);
         brainPass.mintNFT(0, 172800, 518400);
         assertEq(brainPass.balanceOf(alice), 1);
+        assertEq(mockERC20.balanceOf(address(this)), 60e18);
         bool hasMinted = brainPass.addressToPassId(alice, 0);
         assertEq(hasMinted, true);
         vm.stopPrank();
