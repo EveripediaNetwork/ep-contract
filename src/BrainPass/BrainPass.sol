@@ -26,6 +26,9 @@ contract BrainPassCollectibles is ERC721, Owned {
     error MintingPaymentFailed();
     error IncreseTimePaymentFailed();
     error UserBalanceNotEnough();
+    error MaxPassNFTsReached();
+    error NotTheOwnerOfThisNft();
+    error InvalidMaxTokensForAPass();
 
     /// -----------------------------------------------------------------------
     ///  Inheritances
@@ -84,10 +87,6 @@ contract BrainPassCollectibles is ERC721, Owned {
     /// External functions
     /// -----------------------------------------------------------------------
 
-    function _baseURI() internal view virtual override returns (string memory) {
-        return baseTokenURI;
-    }
-
     /// @notice Add a new Pass Type
     /// @param name and others are the details needed for a passType
     function addPassType(
@@ -97,8 +96,8 @@ contract BrainPassCollectibles is ERC721, Owned {
         uint256 maxTokens,
         uint256 discount
     ) external onlyOwner {
-        require(bytes(tokenURI).length > 0, "Invalid token URI");
-        require(maxTokens > 0, "Invalid max tokens");
+        if (maxTokens <= 0) revert InvalidMaxTokensForAPass();
+
         uint256 passId = passIds.current();
         passTypes[passId] = PassType(
             passId,
@@ -122,10 +121,8 @@ contract BrainPassCollectibles is ERC721, Owned {
         uint256 startTimestamp,
         uint256 endTimestamp
     ) external {
-        require(
-            addressToPassId[msg.sender][passId] != true,
-            "Max NFTs per address reached"
-        );
+        if (addressToPassId[msg.sender][passId] == true)
+            revert MaxPassNFTsReached();
 
         PassType storage passType = passTypes[passId];
 
@@ -172,10 +169,7 @@ contract BrainPassCollectibles is ERC721, Owned {
         uint newStartTime,
         uint256 newEndTime
     ) external {
-        require(
-            msg.sender == ownerOf(tokenId),
-            "You cannot increase the time for an NFT you don't own"
-        );
+        if (msg.sender != ownerOf(tokenId)) revert NotTheOwnerOfThisNft();
 
         UserPassItem storage pass = addressToNFTPass[msg.sender][tokenId];
         uint256 price = calculatePrice(pass.passId, newStartTime, newEndTime);
@@ -233,6 +227,10 @@ contract BrainPassCollectibles is ERC721, Owned {
     /// Getters
     /// -----------------------------------------------------------------------
 
+    function _baseURI() internal view virtual override returns (string memory) {
+        return baseTokenURI;
+    }
+
     /// @notice Gets all the NFT owned by an address
     /// @param user The address of the user
     function getUserPassDetails(
@@ -254,7 +252,7 @@ contract BrainPassCollectibles is ERC721, Owned {
     function getAllPassType() external view returns (PassType[] memory) {
         uint256 total = passIds.current();
         PassType[] memory passType = new PassType[](total);
-        for (uint256 i = 0; i < total; i++) {
+        for (uint256 i = 1; i < total; i++) {
             passType[i] = passTypes[i];
         }
         return passType;
@@ -272,7 +270,7 @@ contract BrainPassCollectibles is ERC721, Owned {
     /// -----------------------------------------------------------------------
     /// Setters
     /// -----------------------------------------------------------------------
-    function setBaseURI(string memory tokenURI) internal {
+    function setBaseURI(string memory tokenURI) public {
         baseTokenURI = tokenURI;
     }
 
