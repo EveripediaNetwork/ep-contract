@@ -60,9 +60,9 @@ contract TestEditor is PRBTest, Cheats {
         mockERC20.approve(address(brainPass), 120e18);
         brainPass.mintNFT(0, 172800, 518400);
         uint256 _tokenId = brainPass.getUserPassDetails(alice, 0).tokenId;
-        brainPass.increasePassTime(_tokenId, 518400, 864000);
+        brainPass.increasePassTime(_tokenId, 864000);
         vm.startPrank(bob);
-        brainPass.increasePassTime(_tokenId, 518400, 864000);
+        brainPass.increasePassTime(_tokenId, 864000);
         vm.expectRevert("NotTheOwnerOfThisNft");
     }
 
@@ -75,11 +75,11 @@ contract TestEditor is PRBTest, Cheats {
         assertEq(brainPass.balanceOf(alice), 1);
         uint256 _tokenId = brainPass.getUserPassDetails(alice, 0).tokenId;
         assertEq(_tokenId, 1);
-        brainPass.increasePassTime(_tokenId, 5184000, 8640000);
+        brainPass.increasePassTime(_tokenId, 8640000);
         console.log(mockERC20.balanceOf(address(this)));
         assertEq(mockERC20.balanceOf(address(this)), 1470e18);
         brainPass.addressToNFTPass(alice, _tokenId);
-        uint _startTime = brainPass.getUserPassDetails(alice, 0).startTimestamp;
+        //uint _startTime = brainPass.getUserPassDetails(alice, 0).startTimestamp;
         // assertEq(_startTime, 172800);
     }
 
