@@ -25,7 +25,6 @@ contract BrainPassCollectibles is ERC721, Owned {
 
     error MintingPaymentFailed();
     error IncreseTimePaymentFailed();
-    error UserBalanceNotEnough();
     error AlreadyMintedThisPass();
     error NotTheOwnerOfThisNft();
     error InvalidMaxTokensForAPass();

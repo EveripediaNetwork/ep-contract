@@ -13,6 +13,7 @@ contract TestEditor is PRBTest, Cheats {
     BrainPassCollectibles internal brainPass;
     address private alice = address(0x2);
     address private bob = address(0x3);
+    address private doe = address(0x4);
     MockERC20 private mockERC20;
 
     function setUp() public {
@@ -79,8 +80,8 @@ contract TestEditor is PRBTest, Cheats {
         console.log(mockERC20.balanceOf(address(this)));
         assertEq(mockERC20.balanceOf(address(this)), 1470e18);
         brainPass.addressToNFTPass(alice, _tokenId);
-        uint _startTime = brainPass.getUserPassDetails(alice, 0).startTimestamp;
-        assertEq(_startTime, 172800);
+        uint _endTine = brainPass.getUserPassDetails(alice, 0).endTimestamp;
+        assertEq(_endTine, 8640000);
     }
 
     function testBaseTokenURI() public {
@@ -101,7 +102,27 @@ contract TestEditor is PRBTest, Cheats {
         assertEq(brainPass.getPassType(1).name, "Platinum");
         assertEq(brainPass.getAllPassType().length, 2);
     }
-    //function testGetAllPassType() public {}
 
-    
+    function testFailPassMaxSupplyReached() public {
+        brainPass.addPassType(15, "http://example.orgs", "OleanjiPass", 2, 0);
+        mockERC20.mint(alice, 20000e18);
+        mockERC20.mint(bob, 20000e18);
+        mockERC20.mint(doe, 20000e18);
+        vm.startPrank(alice);
+        mockERC20.approve(address(brainPass), 1700e18);
+        assertEq(brainPass.balanceOf(alice), 0);
+        brainPass.mintNFT(1, 172800, 5184000);
+        assertEq(brainPass.balanceOf(alice), 1);
+        vm.stopPrank();
+        vm.startPrank(bob);
+        mockERC20.approve(address(brainPass), 1700e18);
+        brainPass.mintNFT(1, 172800, 5184000);
+        assertEq(brainPass.balanceOf(bob), 1);
+        vm.stopPrank();
+        vm.startPrank(doe);
+        mockERC20.approve(address(brainPass), 1700e18);
+
+        brainPass.mintNFT(1, 172800, 5184000);
+        vm.expectRevert("PassMaxSupplyReached()");
+    }
 }
