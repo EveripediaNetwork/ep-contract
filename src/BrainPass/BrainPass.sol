@@ -81,7 +81,7 @@ contract BrainPassCollectibles is ERC721, Owned {
     /// Variables
     /// -----------------------------------------------------------------------
     string public baseTokenURI;
-    Counters.Counter private passIds;
+    Counters.Counter private passIdTracker;
 
     /// -----------------------------------------------------------------------
     /// Constructor
@@ -101,11 +101,10 @@ contract BrainPassCollectibles is ERC721, Owned {
         string memory tokenURI,
         string memory name,
         uint256 maxTokens,
-        uint256 discount
+        uint256 discount 
     ) external onlyOwner {
         if (maxTokens <= 0) revert InvalidMaxTokensForAPass();
-
-        uint256 passId = passIds.current();
+        uint256 passId = passIdTracker.current();
         passTypes[passId] = PassType(
             passId,
             name,
@@ -116,7 +115,7 @@ contract BrainPassCollectibles is ERC721, Owned {
             0
         );
 
-        passIds.increment();
+        passIdTracker.increment();
 
         emit NewPassAdded(passId, name, maxTokens, pricePerDay);
     }
@@ -222,9 +221,9 @@ contract BrainPassCollectibles is ERC721, Owned {
         uint256 endTimestamp
     ) internal view returns (uint256) {
         PassType memory passType = passTypes[passId];
-        uint256 duration = endTimestamp.sub(startTimestamp);
+        uint256 subscriptionPeriodInSeconds = endTimestamp.sub(startTimestamp);
 
-        uint256 subscriptionPeriodInDays = duration.div(SECONDS_IN_A_DAY);
+        uint256 subscriptionPeriodInDays = subscriptionPeriodInSeconds.div(SECONDS_IN_A_DAY);
 
         // Calculate the total price
         uint256 totalPrice = subscriptionPeriodInDays.mul(passType.pricePerDay);
@@ -260,7 +259,7 @@ contract BrainPassCollectibles is ERC721, Owned {
     ) public view returns (UserPassItem memory) {
         PassType memory passType = passTypes[passId];
         UserPassItem memory userToken;
-        for (uint256 i = 1; i < passType.maxTokens; i++) {
+        for (uint256 i = 1; i < passType.maxTokens; i++) {  // use mapping instead
             if (ownerOf(i) == user) {
                 userToken = addressToNFTPass[msg.sender][i];
                 break;
@@ -271,7 +270,7 @@ contract BrainPassCollectibles is ERC721, Owned {
 
     /// @notice Gets all the PassType created
     function getAllPassType() external view returns (PassType[] memory) {
-        uint256 total = passIds.current();
+        uint256 total = passIdTracker.current();
         PassType[] memory passType = new PassType[](total);
         for (uint256 i = 0; i < total; i++) {
             passType[i] = passTypes[i];
