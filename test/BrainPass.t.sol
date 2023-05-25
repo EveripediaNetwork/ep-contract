@@ -35,7 +35,7 @@ contract TestEditor is PRBTest, Cheats {
         brainPass.mintNFT(0, 172800, 518400);
         assertEq(brainPass.balanceOf(alice), 1);
         brainPass.mintNFT(0, 172800, 518400);
-        vm.expectRevert("MaxPassNFTsReached");
+        vm.expectRevert("AlreadyMintedThisPass");
     }
 
     function testmintNFT() public {
@@ -49,8 +49,8 @@ contract TestEditor is PRBTest, Cheats {
         brainPass.mintNFT(0, 172800, 5184000);
         assertEq(brainPass.balanceOf(alice), 1);
         assertEq(mockERC20.balanceOf(address(this)), 870e18);
-        bool hasMinted = brainPass.addressToPassId(alice, 0);
-        assertEq(hasMinted, true);
+        uint256 mintedPass = brainPass.getUserPassDetails(alice, 0).passId;
+        assertEq(mintedPass, 0);
         vm.stopPrank();
     }
 
@@ -79,8 +79,8 @@ contract TestEditor is PRBTest, Cheats {
         console.log(mockERC20.balanceOf(address(this)));
         assertEq(mockERC20.balanceOf(address(this)), 1470e18);
         brainPass.addressToNFTPass(alice, _tokenId);
-        //uint _startTime = brainPass.getUserPassDetails(alice, 0).startTimestamp;
-        // assertEq(_startTime, 172800);
+        uint _startTime = brainPass.getUserPassDetails(alice, 0).startTimestamp;
+        assertEq(_startTime, 172800);
     }
 
     function testBaseTokenURI() public {
@@ -101,6 +101,7 @@ contract TestEditor is PRBTest, Cheats {
         assertEq(brainPass.getPassType(1).name, "Platinum");
         assertEq(brainPass.getAllPassType().length, 2);
     }
+    //function testGetAllPassType() public {}
 
-    //todo : upgrade /downgrade after subscription has ended
+    
 }

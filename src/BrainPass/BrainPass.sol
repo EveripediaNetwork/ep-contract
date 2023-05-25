@@ -26,7 +26,7 @@ contract BrainPassCollectibles is ERC721, Owned {
     error MintingPaymentFailed();
     error IncreseTimePaymentFailed();
     error UserBalanceNotEnough();
-    error MaxPassNFTsReached();
+    error AlreadyMintedThisPass();
     error NotTheOwnerOfThisNft();
     error InvalidMaxTokensForAPass();
     error PassTypeNotFound();
@@ -68,7 +68,6 @@ contract BrainPassCollectibles is ERC721, Owned {
     mapping(address => mapping(uint256 => UserPassItem))
         public addressToNFTPass;
     mapping(uint256 => mapping(address => UserPassItem)) internal ownerOfToken;
-    mapping(address => mapping(uint256 => bool)) public addressToPassId;
 
     /// -----------------------------------------------------------------------
     /// Constant
@@ -126,8 +125,8 @@ contract BrainPassCollectibles is ERC721, Owned {
         uint256 startTimestamp,
         uint256 endTimestamp
     ) external {
-        if (addressToPassId[msg.sender][passId] == true)
-            revert MaxPassNFTsReached();
+        if (getUserPassDetails(msg.sender, passId).tokenId != 0)
+            revert AlreadyMintedThisPass();
 
         PassType storage passType = passTypes[passId];
 
@@ -150,7 +149,6 @@ contract BrainPassCollectibles is ERC721, Owned {
             startTimestamp,
             endTimestamp
         );
-        addressToPassId[msg.sender][passId] = true;
         addressToNFTPass[msg.sender][tokenId] = purchase;
         ownerOfToken[passId][msg.sender] = purchase;
         passType.lastTokenIdMinted = tokenId;
@@ -171,7 +169,7 @@ contract BrainPassCollectibles is ERC721, Owned {
     /// @param tokenId The Id of the NFT whose time is to be increased
     function increasePassTime(uint256 tokenId, uint256 newEndTime) external {
         UserPassItem memory pass = addressToNFTPass[msg.sender][tokenId];
-        if (!addressToPassId[msg.sender][pass.passId])
+        if (getUserPassDetails(msg.sender, pass.passId).tokenId != tokenId)
             revert NotTheOwnerOfThisNft();
         uint256 newStartTime;
         if (pass.endTimestamp < block.timestamp) {
