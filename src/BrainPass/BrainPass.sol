@@ -67,6 +67,7 @@ contract BrainPassCollectibles is ERC721, Owned {
     mapping(uint256 => PassType) public passTypes;
     mapping(address => mapping(uint256 => UserPassItem))
         public addressToNFTPass;
+    mapping(uint256 => mapping(address => UserPassItem)) internal ownerOfToken;
     mapping(address => mapping(uint256 => bool)) public addressToPassId;
 
     /// -----------------------------------------------------------------------
@@ -101,7 +102,7 @@ contract BrainPassCollectibles is ERC721, Owned {
         string memory tokenURI,
         string memory name,
         uint256 maxTokens,
-        uint256 discount 
+        uint256 discount
     ) external onlyOwner {
         if (maxTokens <= 0) revert InvalidMaxTokensForAPass();
         uint256 passId = passIdTracker.current();
@@ -114,9 +115,7 @@ contract BrainPassCollectibles is ERC721, Owned {
             discount,
             0
         );
-
         passIdTracker.increment();
-
         emit NewPassAdded(passId, name, maxTokens, pricePerDay);
     }
 
@@ -136,7 +135,8 @@ contract BrainPassCollectibles is ERC721, Owned {
         if (passType.lastTokenIdMinted.add(1) >= passType.maxTokens)
             revert PassMaxSupplyReached();
 
-        if (!validatePassDuration(startTimestamp, endTimestamp)) revert DurationNotInTimeFrame();
+        if (!validatePassDuration(startTimestamp, endTimestamp))
+            revert DurationNotInTimeFrame();
 
         uint256 price = calculatePrice(passId, startTimestamp, endTimestamp);
 
@@ -144,15 +144,15 @@ contract BrainPassCollectibles is ERC721, Owned {
         if (!success) revert MintingPaymentFailed();
 
         uint256 tokenId = passType.lastTokenIdMinted + 1;
-
-        addressToPassId[msg.sender][passId] = true;
         UserPassItem memory purchase = UserPassItem(
             tokenId,
             passId,
             startTimestamp,
             endTimestamp
         );
+        addressToPassId[msg.sender][passId] = true;
         addressToNFTPass[msg.sender][tokenId] = purchase;
+        ownerOfToken[passId][msg.sender] = purchase;
         passType.lastTokenIdMinted = tokenId;
 
         _safeMint(msg.sender, tokenId);
@@ -167,25 +167,21 @@ contract BrainPassCollectibles is ERC721, Owned {
         );
     }
 
-
     /// @notice Increase the time to hold a PassNft
     /// @param tokenId The Id of the NFT whose time is to be increased
-    function increasePassTime(
-        uint256 tokenId,
-        uint256 newEndTime
-    ) external {
-        if (msg.sender != ownerOf(tokenId)) revert NotTheOwnerOfThisNft();
-
-        UserPassItem storage pass = addressToNFTPass[msg.sender][tokenId];
-        
+    function increasePassTime(uint256 tokenId, uint256 newEndTime) external {
+        UserPassItem memory pass = addressToNFTPass[msg.sender][tokenId];
+        if (!addressToPassId[msg.sender][pass.passId])
+            revert NotTheOwnerOfThisNft();
         uint256 newStartTime;
-        if( pass.endTimestamp < block.timestamp ){ 
-           newStartTime= block.timestamp; 
+        if (pass.endTimestamp < block.timestamp) {
+            newStartTime = block.timestamp;
         } else {
-            newStartTime = pass.endTimestamp; 
+            newStartTime = pass.endTimestamp;
         }
 
-        if (!validatePassDuration(newStartTime, newEndTime)) revert DurationNotInTimeFrame();
+        if (!validatePassDuration(newStartTime, newEndTime))
+            revert DurationNotInTimeFrame();
 
         uint256 price = calculatePrice(pass.passId, newStartTime, newEndTime);
         bool success = IERC20(iqToken).transferFrom(msg.sender, owner, price);
@@ -223,7 +219,9 @@ contract BrainPassCollectibles is ERC721, Owned {
         PassType memory passType = passTypes[passId];
         uint256 subscriptionPeriodInSeconds = endTimestamp.sub(startTimestamp);
 
-        uint256 subscriptionPeriodInDays = subscriptionPeriodInSeconds.div(SECONDS_IN_A_DAY);
+        uint256 subscriptionPeriodInDays = subscriptionPeriodInSeconds.div(
+            SECONDS_IN_A_DAY
+        );
 
         // Calculate the total price
         uint256 totalPrice = subscriptionPeriodInDays.mul(passType.pricePerDay);
@@ -238,9 +236,15 @@ contract BrainPassCollectibles is ERC721, Owned {
 
     /// @notice Validates the Timestamp Duration for minting Nft
     /// @param startTimestamp and endTimestamp are used to check if the duration is within the subscription timeframe
-    function validatePassDuration(uint256 startTimestamp, uint256 endTimestamp) internal pure returns(bool){
-        uint256 durationInDays = (endTimestamp.sub(startTimestamp)) / SECONDS_IN_A_DAY; 
-        return durationInDays >= DAYS_MINT_LOWER_LIMIT && durationInDays <= DAYS_MINT_UPPER_LIMIT;
+    function validatePassDuration(
+        uint256 startTimestamp,
+        uint256 endTimestamp
+    ) internal pure returns (bool) {
+        uint256 durationInDays = (endTimestamp.sub(startTimestamp)) /
+            SECONDS_IN_A_DAY;
+        return
+            durationInDays >= DAYS_MINT_LOWER_LIMIT &&
+            durationInDays <= DAYS_MINT_UPPER_LIMIT;
     }
 
     /// -----------------------------------------------------------------------
@@ -257,14 +261,7 @@ contract BrainPassCollectibles is ERC721, Owned {
         address user,
         uint passId
     ) public view returns (UserPassItem memory) {
-        PassType memory passType = passTypes[passId];
-        UserPassItem memory userToken;
-        for (uint256 i = 1; i < passType.maxTokens; i++) {  // use mapping instead
-            if (ownerOf(i) == user) {
-                userToken = addressToNFTPass[msg.sender][i];
-                break;
-            }
-        }
+        UserPassItem memory userToken = ownerOfToken[passId][user];
         return userToken;
     }
 
