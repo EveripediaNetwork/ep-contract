@@ -185,7 +185,15 @@ contract BrainPassCollectibles is ERC721, Owned {
         bool success = IERC20(iqToken).transferFrom(msg.sender, owner, price);
         if (!success) revert IncreseTimePaymentFailed();
 
-        pass.endTimestamp = newEndTime;
+        UserPassItem memory purchase = UserPassItem(
+            pass.tokenId,
+            pass.passId,
+            pass.startTimestamp,
+            newEndTime
+        );
+
+        addressToNFTPass[msg.sender][tokenId] = purchase;
+        ownerOfToken[pass.passId][msg.sender] = purchase;
 
         emit TimeIncreased(
             msg.sender,
