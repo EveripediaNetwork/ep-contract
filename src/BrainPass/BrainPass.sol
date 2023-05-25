@@ -167,7 +167,7 @@ contract BrainPassCollectibles is ERC721, Owned {
 
     /// @notice Increase the time to hold a PassNft
     /// @param tokenId The Id of the NFT whose time is to be increased
-    function increasePassTime(uint256 tokenId, uint256 newEndTime) external {
+    function increaseEndTime(uint256 tokenId, uint256 newEndTime) external {
         UserPassItem memory pass = addressToNFTPass[msg.sender][tokenId];
         if (getUserPassDetails(msg.sender, pass.passId).tokenId != tokenId)
             revert NotTheOwnerOfThisNft();
