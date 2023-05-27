@@ -130,7 +130,7 @@ contract BrainPassCollectibles is ERC721, Owned {
         PassType storage passType = passTypes[passId];
 
         if (passType.maxTokens == 0) revert PassTypeNotFound();
-        if (passType.lastTokenIdMinted.add(1) >= passType.maxTokens)
+        if (passType.lastTokenIdMinted >= passType.maxTokens)
             revert PassMaxSupplyReached();
 
         if (!validatePassDuration(startTimestamp, endTimestamp))

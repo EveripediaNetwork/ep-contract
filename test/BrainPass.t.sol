@@ -10,119 +10,120 @@ import {ERC721TokenReceiver} from "solmate/tokens/ERC721.sol";
 import {MockERC20} from "../lib/solmate/src/test/utils/mocks/MockERC20.sol";
 
 contract TestEditor is PRBTest, Cheats {
-    BrainPassCollectibles internal brainPass;
-    address private alice = address(0x2);
-    address private bob = address(0x3);
-    address private doe = address(0x4);
-    MockERC20 private mockERC20;
+    BrainPassCollectibles BrainPass;
+    address alice = vm.addr(0x2);
+    address bob = vm.addr(0x3);
+    address doe = vm.addr(0x4);
+    MockERC20 mockERC20;
 
     function setUp() public {
         mockERC20 = new MockERC20("Mock IQ Token", "MIT", 18); //mocking IQ token
-        brainPass = new BrainPassCollectibles(address(mockERC20));
-        brainPass.addPassType(15, "http://example.com/1", "Gold", 200, 0);
+        BrainPass = new BrainPassCollectibles(address(mockERC20));
+        BrainPass.addPassType(15, "http://example.com/1", "Gold", 200, 0);
     }
 
     function testAddPassType() public {
-        brainPass.addPassType(15, "http://example.com/56", "Gold", 200, 0);
-        string memory _name = brainPass.getPassType(1).name;
+        BrainPass.addPassType(15, "http://example.com/56", "Gold", 200, 0);
+        string memory _name = BrainPass.getPassType(1).name;
         assertEq(_name, "Gold");
     }
 
-    function testFailMintNFT() public {
-        mockERC20.mint(alice, 300e18);
+    function testmintNFTWrong() public {
+        mockERC20.mint(alice, 20000e18);
         vm.startPrank(alice);
-        mockERC20.approve(address(brainPass), 120e18);
-        assertEq(brainPass.balanceOf(alice), 0);
-        brainPass.mintNFT(0, 172800, 518400);
-        assertEq(brainPass.balanceOf(alice), 1);
-        brainPass.mintNFT(0, 172800, 518400);
-        vm.expectRevert("AlreadyMintedThisPass");
+        mockERC20.approve(address(BrainPass), 9000e18);
+        assertEq(BrainPass.balanceOf(alice), 0);
+        BrainPass.mintNFT(0, 172800, 5184000);
+        assertEq(BrainPass.balanceOf(alice), 1);
+        vm.expectRevert(BrainPassCollectibles.AlreadyMintedThisPass.selector);
+        BrainPass.mintNFT(0, 172800, 5184000);
+        vm.stopPrank();
     }
 
     function testmintNFT() public {
         mockERC20.mint(alice, 20000e18);
         vm.startPrank(alice);
-        mockERC20.approve(address(brainPass), 3e18);
+        mockERC20.approve(address(BrainPass), 3e18);
         vm.expectRevert(stdError.arithmeticError);
-        brainPass.mintNFT(0, 172800, 5184000);
-        mockERC20.approve(address(brainPass), 9000e18);
-        assertEq(brainPass.balanceOf(alice), 0);
-        brainPass.mintNFT(0, 172800, 5184000);
-        assertEq(brainPass.balanceOf(alice), 1);
+        BrainPass.mintNFT(0, 172800, 5184000);
+        mockERC20.approve(address(BrainPass), 9000e18);
+        assertEq(BrainPass.balanceOf(alice), 0);
+        BrainPass.mintNFT(0, 172800, 5184000);
+        assertEq(BrainPass.balanceOf(alice), 1);
         assertEq(mockERC20.balanceOf(address(this)), 870e18);
-        uint256 mintedPass = brainPass.getUserPassDetails(alice, 0).passId;
+        uint256 mintedPass = BrainPass.getUserPassDetails(alice, 0).passId;
         assertEq(mintedPass, 0);
         vm.stopPrank();
     }
 
-    function testFailIncreaseTime() public {
-        mockERC20.mint(alice, 300e18);
+    function testIncreaseTimeWrong() public {
+        mockERC20.mint(alice, 3000e18);
         vm.startPrank(alice);
-        mockERC20.approve(address(brainPass), 120e18);
-        brainPass.mintNFT(0, 172800, 518400);
-        uint256 _tokenId = brainPass.getUserPassDetails(alice, 0).tokenId;
-        brainPass.increaseEndTime(_tokenId, 864000);
+        mockERC20.approve(address(BrainPass), 9000e18);
+        BrainPass.mintNFT(0, 172800, 5184000);
+        uint256 _tokenId = BrainPass.getUserPassDetails(alice, 0).tokenId;
+        BrainPass.increaseEndTime(_tokenId, 8640000);
+        vm.stopPrank();
         vm.startPrank(bob);
-        brainPass.increaseEndTime(_tokenId, 864000);
-        vm.expectRevert("NotTheOwnerOfThisNft");
+        vm.expectRevert(BrainPassCollectibles.NotTheOwnerOfThisNft.selector);
+        BrainPass.increaseEndTime(_tokenId, 8640000);
     }
 
     function testIncreaseTime() public {
         mockERC20.mint(alice, 20000e18);
         vm.startPrank(alice);
-        mockERC20.approve(address(brainPass), 12000e18);
-        assertEq(brainPass.balanceOf(alice), 0);
-        brainPass.mintNFT(0, 172800, 5184000);
-        assertEq(brainPass.balanceOf(alice), 1);
-        uint256 _tokenId = brainPass.getUserPassDetails(alice, 0).tokenId;
+        mockERC20.approve(address(BrainPass), 12000e18);
+        assertEq(BrainPass.balanceOf(alice), 0);
+        BrainPass.mintNFT(0, 172800, 5184000);
+        assertEq(BrainPass.balanceOf(alice), 1);
+        uint256 _tokenId = BrainPass.getUserPassDetails(alice, 0).tokenId;
         assertEq(_tokenId, 1);
-        brainPass.increaseEndTime(_tokenId, 8640000);
+        BrainPass.increaseEndTime(_tokenId, 8640000);
         console.log(mockERC20.balanceOf(address(this)));
         assertEq(mockERC20.balanceOf(address(this)), 1470e18);
-        brainPass.addressToNFTPass(alice, _tokenId);
-        uint _endTine = brainPass.getUserPassDetails(alice, 0).endTimestamp;
+        BrainPass.addressToNFTPass(alice, _tokenId);
+        uint _endTine = BrainPass.getUserPassDetails(alice, 0).endTimestamp;
         assertEq(_endTine, 8640000);
     }
 
     function testBaseTokenURI() public {
-        assertEq(brainPass.baseTokenURI(), "");
-        brainPass.setBaseURI("http://example.org.com/565");
-        assertEq(brainPass.baseTokenURI(), "http://example.org.com/565");
+        assertEq(BrainPass.baseTokenURI(), "");
+        BrainPass.setBaseURI("http://example.org.com/565");
+        assertEq(BrainPass.baseTokenURI(), "http://example.org.com/565");
     }
 
     function testGetAllPassType() public {
-        assertEq(brainPass.getAllPassType().length, 1);
-        brainPass.addPassType(
+        assertEq(BrainPass.getAllPassType().length, 1);
+        BrainPass.addPassType(
             400,
             "http://example.com/56",
             "Platinum",
             3000,
             10
         );
-        assertEq(brainPass.getPassType(1).name, "Platinum");
-        assertEq(brainPass.getAllPassType().length, 2);
+        assertEq(BrainPass.getPassType(1).name, "Platinum");
+        assertEq(BrainPass.getAllPassType().length, 2);
     }
 
-    function testFailPassMaxSupplyReached() public {
-        brainPass.addPassType(15, "http://example.orgs", "OleanjiPass", 2, 0);
+    function testMintNftWrong() public {
+        BrainPass.addPassType(15, "http://example.orgs", "OleanjiPass", 2, 0);
         mockERC20.mint(alice, 20000e18);
         mockERC20.mint(bob, 20000e18);
         mockERC20.mint(doe, 20000e18);
         vm.startPrank(alice);
-        mockERC20.approve(address(brainPass), 1700e18);
-        assertEq(brainPass.balanceOf(alice), 0);
-        brainPass.mintNFT(1, 172800, 5184000);
-        assertEq(brainPass.balanceOf(alice), 1);
+        mockERC20.approve(address(BrainPass), 1700e18);
+        assertEq(BrainPass.balanceOf(alice), 0);
+        BrainPass.mintNFT(1, 172800, 5184000);
+        assertEq(BrainPass.balanceOf(alice), 1);
         vm.stopPrank();
         vm.startPrank(bob);
-        mockERC20.approve(address(brainPass), 1700e18);
-        brainPass.mintNFT(1, 172800, 5184000);
-        assertEq(brainPass.balanceOf(bob), 1);
+        mockERC20.approve(address(BrainPass), 1700e18);
+        BrainPass.mintNFT(1, 172800, 5184000);
+        assertEq(BrainPass.balanceOf(bob), 1);
         vm.stopPrank();
         vm.startPrank(doe);
-        mockERC20.approve(address(brainPass), 1700e18);
-
-        brainPass.mintNFT(1, 172800, 5184000);
-        vm.expectRevert("PassMaxSupplyReached()");
+        mockERC20.approve(address(BrainPass), 1700e18);
+        vm.expectRevert(BrainPassCollectibles.PassMaxSupplyReached.selector);
+        BrainPass.mintNFT(1, 172800, 5184000);
     }
 }
