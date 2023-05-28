@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 import {PRBTest} from "prb-test/PRBTest.sol";
 import {Cheats} from "forge-std/Cheats.sol";
-import "forge-std/console.sol";
 import {stdError} from "forge-std/Errors.sol";
 import {BrainPassCollectibles} from "../src/BrainPass/BrainPass.sol";
 import {ERC721TokenReceiver} from "solmate/tokens/ERC721.sol";
@@ -37,6 +36,15 @@ contract TestEditor is PRBTest, Cheats {
         assertEq(BrainPass.balanceOf(alice), 1);
         vm.expectRevert(BrainPassCollectibles.AlreadyMintedThisPass.selector);
         BrainPass.mintNFT(0, 172800, 5184000);
+        vm.stopPrank();
+    }
+
+    function testMintDurationNotInTimeFrame() public {
+        mockERC20.mint(alice, 20000e18);
+        vm.startPrank(alice);
+        mockERC20.approve(address(BrainPass), 9000e18);
+        vm.expectRevert(BrainPassCollectibles.DurationNotInTimeFrame.selector);
+        BrainPass.mintNFT(0, 172800, 518400);
         vm.stopPrank();
     }
 
@@ -79,7 +87,6 @@ contract TestEditor is PRBTest, Cheats {
         uint256 _tokenId = BrainPass.getUserPassDetails(alice, 0).tokenId;
         assertEq(_tokenId, 1);
         BrainPass.increaseEndTime(_tokenId, 8640000);
-        console.log(mockERC20.balanceOf(address(this)));
         assertEq(mockERC20.balanceOf(address(this)), 1470e18);
         BrainPass.addressToNFTPass(alice, _tokenId);
         uint _endTine = BrainPass.getUserPassDetails(alice, 0).endTimestamp;

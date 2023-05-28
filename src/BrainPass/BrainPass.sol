@@ -37,12 +37,14 @@ contract BrainPassCollectibles is ERC721, Owned {
     /// -----------------------------------------------------------------------
     ///  Inheritances
     /// -----------------------------------------------------------------------
+
     using SafeMath for uint256;
     using Counters for Counters.Counter;
 
     /// -----------------------------------------------------------------------
     /// Structs
     /// -----------------------------------------------------------------------
+
     struct UserPassItem {
         uint256 tokenId;
         uint256 passId;
@@ -63,6 +65,7 @@ contract BrainPassCollectibles is ERC721, Owned {
     /// -----------------------------------------------------------------------
     /// Mappings
     /// -----------------------------------------------------------------------
+
     mapping(uint256 => PassType) public passTypes;
     mapping(address => mapping(uint256 => UserPassItem))
         public addressToNFTPass;
@@ -71,6 +74,7 @@ contract BrainPassCollectibles is ERC721, Owned {
     /// -----------------------------------------------------------------------
     /// Constant
     /// -----------------------------------------------------------------------
+
     address public immutable iqToken;
     uint256 immutable SECONDS_IN_A_DAY = 86400;
     uint256 immutable DAYS_MINT_LOWER_LIMIT = 28;
@@ -79,12 +83,14 @@ contract BrainPassCollectibles is ERC721, Owned {
     /// -----------------------------------------------------------------------
     /// Variables
     /// -----------------------------------------------------------------------
+
     string public baseTokenURI;
     Counters.Counter private passIdTracker;
 
     /// -----------------------------------------------------------------------
     /// Constructor
     /// -----------------------------------------------------------------------
+    
     constructor(address IqAddr) ERC721("BAINPASS", "BEP") Owned(msg.sender) {
         iqToken = IqAddr;
     }
@@ -94,7 +100,11 @@ contract BrainPassCollectibles is ERC721, Owned {
     /// -----------------------------------------------------------------------
 
     /// @notice Add a new Pass Type
-    /// @param name and others are the details needed for a passType
+    /// @param pricePerDay the price per day of the new pass type 
+    /// @param tokenURI the link that stores the data of all the Nfts in the new pass
+    /// @param name the name of the new pass type to be added
+    /// @param maxTokens the total number of tokens in the pass
+    /// @param discount the amount in % to be deducted when buying the pass
     function addPassType(
         uint256 pricePerDay,
         string memory tokenURI,
@@ -119,6 +129,8 @@ contract BrainPassCollectibles is ERC721, Owned {
 
     /// @notice Mint and NFT of a particular passtype
     /// @param passId The id of the passtype to mint
+    /// @param startTimestamp The time when the NFT subcription time starts
+    /// @param endTimestamp The time when the NFT subcription time ends
     function mintNFT(
         uint256 passId,
         uint256 startTimestamp,
@@ -166,6 +178,7 @@ contract BrainPassCollectibles is ERC721, Owned {
 
     /// @notice Increase the time to hold a PassNft
     /// @param tokenId The Id of the NFT whose time is to be increased
+    /// @param newEndTime The new subcription endTime for the of the NFT
     function increaseEndTime(uint256 tokenId, uint256 newEndTime) external {
         UserPassItem memory pass = addressToNFTPass[msg.sender][tokenId];
         if (getUserPassDetails(msg.sender, pass.passId).tokenId != tokenId)
@@ -215,7 +228,8 @@ contract BrainPassCollectibles is ERC721, Owned {
     /// -----------------------------------------------------------------------
 
     /// @notice Calculate the price of an Nft
-    /// @param startTimestamp and endTimestamp are used to calc the price to be paid
+    /// @param startTimestamp The start time to calculate the price of the Nft
+    /// @param endTimestamp The end time to calculate the price of the Nft
     function calculatePrice(
         uint256 passId,
         uint256 startTimestamp,
@@ -240,7 +254,8 @@ contract BrainPassCollectibles is ERC721, Owned {
     }
 
     /// @notice Validates the Timestamp Duration for minting Nft
-    /// @param startTimestamp and endTimestamp are used to check if the duration is within the subscription timeframe
+    /// @param startTimestamp The start time for checking the validity of a pass
+    /// @param endTimestamp The end time for checking the validity of a pass
     function validatePassDuration(
         uint256 startTimestamp,
         uint256 endTimestamp
@@ -262,6 +277,7 @@ contract BrainPassCollectibles is ERC721, Owned {
 
     /// @notice Gets all the NFT owned by an address
     /// @param user The address of the user
+    /// @param passId The Id of the pass to get the user's info on
     function getUserPassDetails(
         address user,
         uint passId
@@ -292,6 +308,9 @@ contract BrainPassCollectibles is ERC721, Owned {
     /// -----------------------------------------------------------------------
     /// Setters
     /// -----------------------------------------------------------------------
+
+    /// @notice Sets the tokenURI where the NFT data is gotten
+    /// @param tokenURI The tokenURI to be set
     function setBaseURI(string memory tokenURI) public {
         baseTokenURI = tokenURI;
     }
