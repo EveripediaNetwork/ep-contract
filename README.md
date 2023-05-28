@@ -42,7 +42,7 @@ forge script script/BrainPassDeployer.s.sol:BrainPassDeployer --rpc-url $RPC_URL
 
 # Expalaining How BrainPassCollectibles Works
 
-BrainPassCollectibles is a Solidity smart contract that enables the creation and management of BrainPass NFTs. It allows users to buy passes to have some Wiki previledges on IQ Wiki and provides functionalities to mint NFTs, increase pass time, and manage pass types.
+BrainPassCollectibles is a Solidity smart contract that enables the creation and management of BrainPass NFTs. It allows users to buy passes to have some Wiki privileges on IQ Wiki and provides functionalities to mint NFTs, increase pass time, and manage pass types.
 
 ## Usage
 
