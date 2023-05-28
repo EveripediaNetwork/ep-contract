@@ -12,6 +12,10 @@ interface IERC20 {
         address to,
         uint256 amount
     ) external returns (bool);
+
+    function balanceOf(address account) external view returns (uint256);
+
+    function transfer(address to, uint256 amount) external returns (bool);
 }
 
 /// @title BRAIN Pass NFT
@@ -33,6 +37,8 @@ contract BrainPassCollectibles is ERC721, Owned {
     error NoEtherLeftToWithdraw();
     error TransferFailed();
     error DurationNotInTimeFrame();
+    error CannotMintPausedPassType();
+    error NoIQLeftToWithdraw();
 
     /// -----------------------------------------------------------------------
     ///  Inheritances
@@ -60,6 +66,7 @@ contract BrainPassCollectibles is ERC721, Owned {
         uint256 maxTokens;
         uint256 discount;
         uint256 lastTokenIdMinted;
+        bool isPaused;
     }
 
     /// -----------------------------------------------------------------------
@@ -75,10 +82,10 @@ contract BrainPassCollectibles is ERC721, Owned {
     /// Constant
     /// -----------------------------------------------------------------------
 
-    address public immutable iqToken;
-    uint256 immutable SECONDS_IN_A_DAY = 86400;
-    uint256 immutable DAYS_MINT_LOWER_LIMIT = 28;
-    uint256 immutable DAYS_MINT_UPPER_LIMIT = 365;
+    address public iqToken;
+    uint256 constant SECONDS_IN_A_DAY = 1 days;
+    uint256 constant DAYS_MINT_LOWER_LIMIT = 28;
+    uint256 constant DAYS_MINT_UPPER_LIMIT = 365;
 
     /// -----------------------------------------------------------------------
     /// Variables
@@ -90,9 +97,10 @@ contract BrainPassCollectibles is ERC721, Owned {
     /// -----------------------------------------------------------------------
     /// Constructor
     /// -----------------------------------------------------------------------
-    
+
     constructor(address IqAddr) ERC721("BAINPASS", "BEP") Owned(msg.sender) {
         iqToken = IqAddr;
+        passIdTracker.increment();
     }
 
     /// -----------------------------------------------------------------------
@@ -100,7 +108,7 @@ contract BrainPassCollectibles is ERC721, Owned {
     /// -----------------------------------------------------------------------
 
     /// @notice Add a new Pass Type
-    /// @param pricePerDay the price per day of the new pass type 
+    /// @param pricePerDay the price per day of the new pass type
     /// @param tokenURI the link that stores the data of all the Nfts in the new pass
     /// @param name the name of the new pass type to be added
     /// @param maxTokens the total number of tokens in the pass
@@ -121,10 +129,31 @@ contract BrainPassCollectibles is ERC721, Owned {
             tokenURI,
             maxTokens,
             discount,
-            0
+            0,
+            false
         );
         passIdTracker.increment();
         emit NewPassAdded(passId, name, maxTokens, pricePerDay);
+    }
+
+    /// @notice Pause a Pass Type
+    /// @param passId the Id of the pass to be deactivated
+    function pausePassType(uint256 passId) external onlyOwner {
+        if (passId >= passIdTracker.current()) revert PassTypeNotFound();
+        PassType storage passType = passTypes[passId];
+
+        passTypes[passId] = PassType(
+            passType.passId,
+            passType.name,
+            passType.pricePerDay,
+            passType.tokenURI,
+            passType.maxTokens,
+            passType.discount,
+            passType.discount,
+            true
+        );
+
+        emit PassTypePaused(passId, passType.name);
     }
 
     /// @notice Mint and NFT of a particular passtype
@@ -136,12 +165,13 @@ contract BrainPassCollectibles is ERC721, Owned {
         uint256 startTimestamp,
         uint256 endTimestamp
     ) external {
+        if (passId >= passIdTracker.current()) revert PassTypeNotFound();
         if (getUserPassDetails(msg.sender, passId).tokenId != 0)
             revert AlreadyMintedThisPass();
 
         PassType storage passType = passTypes[passId];
 
-        if (passType.maxTokens == 0) revert PassTypeNotFound();
+        if (passType.isPaused) revert CannotMintPausedPassType();
         if (passType.lastTokenIdMinted >= passType.maxTokens)
             revert PassMaxSupplyReached();
 
@@ -164,8 +194,8 @@ contract BrainPassCollectibles is ERC721, Owned {
         ownerOfToken[passId][msg.sender] = purchase;
         passType.lastTokenIdMinted = tokenId;
 
-        _safeMint(msg.sender, tokenId);
         setBaseURI(passType.tokenURI);
+        _safeMint(msg.sender, tokenId);
 
         emit BrainPassBought(
             msg.sender,
@@ -181,6 +211,10 @@ contract BrainPassCollectibles is ERC721, Owned {
     /// @param newEndTime The new subcription endTime for the of the NFT
     function increaseEndTime(uint256 tokenId, uint256 newEndTime) external {
         UserPassItem memory pass = addressToNFTPass[msg.sender][tokenId];
+
+        PassType storage passType = passTypes[pass.passId];
+        if (passType.isPaused) revert CannotMintPausedPassType();
+
         if (getUserPassDetails(msg.sender, pass.passId).tokenId != tokenId)
             revert NotTheOwnerOfThisNft();
         uint256 newStartTime;
@@ -217,9 +251,16 @@ contract BrainPassCollectibles is ERC721, Owned {
 
     /// @notice Withdraws any amount in the contract
     function withdraw() external payable onlyOwner {
-        uint256 balance = address(this).balance;
-        if (balance <= 0) revert NoEtherLeftToWithdraw();
-        (bool success, ) = (msg.sender).call{value: balance}("");
+        uint256 tokenBalance = IERC20(iqToken).balanceOf(address(this));
+        uint256 ethbalance = address(this).balance;
+
+        if (tokenBalance <= 0) revert NoIQLeftToWithdraw();
+        if (ethbalance <= 0) revert NoEtherLeftToWithdraw();
+
+        bool tokenSuccess = IERC20(iqToken).transfer(msg.sender, tokenBalance);
+        if (!tokenSuccess) revert TransferFailed();
+
+        (bool success, ) = (msg.sender).call{value: ethbalance}("");
         if (!success) revert TransferFailed();
     }
 
@@ -250,7 +291,7 @@ contract BrainPassCollectibles is ERC721, Owned {
             totalPrice = totalPrice.sub(discountAmount);
         }
 
-        return totalPrice * 1e18;
+        return totalPrice;
     }
 
     /// @notice Validates the Timestamp Duration for minting Nft
@@ -340,4 +381,6 @@ contract BrainPassCollectibles is ERC721, Owned {
         uint256 _maxtokens,
         uint256 _pricePerDay
     );
+
+    event PassTypePaused(uint256 indexed _passId, string _name);
 }

@@ -74,7 +74,6 @@ Call the `mintNFT` function with the following parameters:
 This function is ued to increase the duration for which a pass is owned for.
 Call the `increasePassTime` function with the following parameters:
 - `tokenId`: The ID of the NFT whose time should be increased.
-- `newStartTime`: The new start timestamp for the pass.
 - `newEndTime`: The new end timestamp for the pass.
 
 ### Get User Pass Details
