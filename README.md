@@ -47,51 +47,59 @@ BrainPassCollectibles is a Solidity smart contract that enables the creation and
 ## Usage
 
 ### Contract Deployment
-
 Deploy the `BrainPassCollectibles` contract by providing the address of the IQ token contract as a constructor parameter.
 
-### Adding a Pass Type
-This function allows the contract owner to add a new pass type.
+## `pause()`
+Pauses the contract and prevents any further actions. Can only be called by the contract owner.
 
-Call the `addPassType` function with the following parameters:
-- `pricePerDay`: The price per day in IQ tokens for the pass.
-- `tokenURI`: The base URI for the pass token metadata.
-- `name`: The name of the pass type.
-- `maxTokens`: The maximum number of tokens that can be minted for this pass type.
-- `discount`: The discount percentage applied to the pass price (optional).
+## `unpause()`
+Unpauses the contract and resumes normal operations. Can only be called by the contract owner.
 
-### Minting an NFT Pass
-This function allows users to mint a BrainPass NFT for a specific pass type and duration.
-Call the `mintNFT` function with the following parameters:
-- `passId`: The ID of the pass type to mint.
-- `startTimestamp`: The start timestamp for the pass.
-- `endTimestamp`: The end timestamp for the pass.
-- the duration is calculated by endTimestamp - startTimestamp
-- An address can only mint one passtype.
-- The payment is in IQ Token
+## `configureMintLimit()`
+Configures the lower and upper limits for minting NFTs.
+- `lowerLimit`: Minimum duration (in days) for a subscription.
+- `upperLimit`: Maximum duration (in days) for a subscription.
+Only the contract owner can call this function.
 
-### Increasing Pass Time
-This function is ued to increase the duration for which a pass is owned for.
-Call the `increasePassTime` function with the following parameters:
-- `tokenId`: The ID of the NFT whose time should be increased.
-- `newEndTime`: The new end timestamp for the pass.
+## `addPassType()`
+Adds a new pass type.
+- `pricePerDay`: Price per day of the new pass type.
+- `tokenUri`: URI that stores the data of all the NFTs in the new pass.
+- `name`: Name of the new pass type.
+- `maxTokens`: Total number of tokens in the pass.
+- `discount`: Discount amount (in percentage) to be deducted when buying the pass.
+Only the contract owner can call this function.
 
-### Get User Pass Details
-This gets the details of the tokenId the user has in the particular passId
-Call the `getUserPassDetails` function with the following parameters:
-- `user`: The address of the user.
-- `passId`: The ID of the pass type.
+## `pausePassType()`
+Pauses a specific pass type.
+- `passId`: ID of the pass type to be deactivated.
+Only the contract owner can call this function.
 
-### Get Pass Types
-Call the `getAllPassType` function to get an array of all pass types.
+## `mintNFT()`
+Mints an NFT of a particular pass type.
+- `passId`: ID of the pass type to mint.
+- `startTimestamp`: Time when the NFT subscription starts.
+- `endTimestamp`: Time when the NFT subscription ends.
 
-### Get Pass Type Details
-This gets a single passtype  details
-Call the `getPassType` function with the following parameters:
-- `passId`: The ID of the pass type.
+## `increaseEndTime()`
+Increases the subscription time of an NFT.
+- `tokenId`: ID of the NFT whose time is to be increased.
+- `newEndTime`: New subscription end time for the NFT.
 
-### Withdraw Ether
-Only the contract owner can call the `withdraw` function to withdraw any amount of Ether stored in the contract. 
+## `withdraw()`
+Withdraws any amount of IQ tokens and Ether held in the contract. Can only be called by the contract owner.
+
+## `getUserPassDetails()`
+Retrieves the details of an NFT owned by a specific user for a given pass type.
+- `user`: Address of the user.
+- `passId`: ID of the pass type.
+
+## `getAllPassType()`
+Retrieves the details of all the pass types added to the contract.
+
+## `getPassType()`
+Retrieves the details of a specific pass type.
+- `passId`: ID of the pass type
 
 ## Events
 

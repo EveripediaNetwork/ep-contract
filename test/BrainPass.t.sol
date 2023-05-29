@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import {PRBTest} from "prb-test/PRBTest.sol";
 import {Cheats} from "forge-std/Cheats.sol";
+import "forge-std/console.sol";
 import {stdError} from "forge-std/Errors.sol";
 import {BrainPassCollectibles} from "../src/BrainPass/BrainPass.sol";
 import {ERC721TokenReceiver} from "solmate/tokens/ERC721.sol";
@@ -19,11 +20,11 @@ contract BrainPassTest is PRBTest, Cheats {
     function setUp() public {
         mockERC20 = new MockERC20("Mock IQ Token", "MIT", 18); //mocking IQ token
         BrainPass = new BrainPassCollectibles(address(mockERC20));
-        BrainPass.addPassType(15e18, "http://example.com/1", "Gold", 200, 0);
+        BrainPass.addPassType(15e18, "http://example.com", "Gold", 200, 0);
     }
 
     function testAddPassType() public {
-        BrainPass.addPassType(15e18, "http://example.com/56", "Gold", 200, 0);
+        BrainPass.addPassType(15e18, "http://example.com", "Gold", 200, 0);
         string memory _name = BrainPass.getPassType(1).name;
         assertEq(_name, "Gold");
     }
@@ -92,8 +93,33 @@ contract BrainPassTest is PRBTest, Cheats {
         BrainPass.mintNFT(1, 172800, 5184000);
         assertEq(BrainPass.balanceOf(alice), 1);
         assertEq(mockERC20.balanceOf(address(this)), 870e18);
-        uint256 mintedPass = BrainPass.getUserPassDetails(alice, 0).passId;
-        assertEq(mintedPass, 0);
+        uint256 mintedPass = BrainPass.getUserPassDetails(alice, 1).tokenId;
+        assertEq(mintedPass, 1);
+        vm.stopPrank();
+    }
+
+    function testdiffmintNFT() public {
+        BrainPass.addPassType(
+            15e18,
+            "http://example.orgs",
+            "OleanjiPass",
+            2,
+            0
+        );
+        BrainPass.addPassType(15e18, "http://oleanji.com", "KesarPass", 2, 0);
+        mockERC20.mint(alice, 20000e18);
+        vm.startPrank(alice);
+        mockERC20.approve(address(BrainPass), 20000e18);
+        BrainPass.mintNFT(1, 172800, 5184000);
+        console.log(BrainPass.tokenURI(1));
+        BrainPass.mintNFT(2, 172800, 5184000);
+        uint256 newId = BrainPass.getUserPassDetails(alice, 2).tokenId;
+        console.log(BrainPass.tokenURI(newId));
+        BrainPass.mintNFT(3, 172800, 5184000);
+        uint256 newIds = BrainPass.getUserPassDetails(alice, 3).tokenId;
+        console.log(BrainPass.tokenURI(newIds));
+        uint256 mintedPass = BrainPass.getUserPassDetails(alice, 2).tokenId;
+        assertEq(mintedPass, 201);
         vm.stopPrank();
     }
 
@@ -124,12 +150,6 @@ contract BrainPassTest is PRBTest, Cheats {
         BrainPass.addressToNFTPass(alice, _tokenId);
         uint _endTine = BrainPass.getUserPassDetails(alice, 1).endTimestamp;
         assertEq(_endTine, 8640000);
-    }
-
-    function testBaseTokenURI() public {
-        assertEq(BrainPass.baseTokenURI(), "");
-        BrainPass.setBaseURI("http://example.org.com/565");
-        assertEq(BrainPass.baseTokenURI(), "http://example.org.com/565");
     }
 
     function testGetAllPassType() public {

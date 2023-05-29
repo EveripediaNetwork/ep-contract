@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
+import {ERC721} from "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
 import {Counters} from "openzeppelin-contracts/contracts/utils/Counters.sol";
-import {Owned} from "solmate/auth/Owned.sol";
-import {SafeMath} from "openzeppelin-contracts/contracts/utils/math/SafeMath.sol";
+import "openzeppelin-contracts/contracts/access/Ownable.sol";
+import "openzeppelin-contracts/contracts/security/Pausable.sol";
+import "openzeppelin-contracts/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "openzeppelin-contracts/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import {Wiki} from "../../src/Wiki.sol";
 
 interface IERC20 {
     function transferFrom(
@@ -22,7 +25,13 @@ interface IERC20 {
 /// @author Oleanji
 /// @notice A pass for IQ Wiki Editors
 
-contract BrainPassCollectibles is ERC721, Owned {
+contract BrainPassCollectibles is
+    ERC721,
+    ERC721Enumerable,
+    ERC721URIStorage,
+    Pausable,
+    Ownable
+{
     /// -----------------------------------------------------------------------
     /// Errors
     /// -----------------------------------------------------------------------
@@ -43,8 +52,6 @@ contract BrainPassCollectibles is ERC721, Owned {
     /// -----------------------------------------------------------------------
     ///  Inheritances
     /// -----------------------------------------------------------------------
-
-    using SafeMath for uint256;
     using Counters for Counters.Counter;
 
     /// -----------------------------------------------------------------------
@@ -66,6 +73,7 @@ contract BrainPassCollectibles is ERC721, Owned {
         uint256 maxTokens;
         uint256 discount;
         uint256 lastTokenIdMinted;
+        uint256 currentNftCount;
         bool isPaused;
     }
 
@@ -83,39 +91,60 @@ contract BrainPassCollectibles is ERC721, Owned {
     /// -----------------------------------------------------------------------
 
     address public iqToken;
-    uint256 constant SECONDS_IN_A_DAY = 1 days;
-    uint256 constant DAYS_MINT_LOWER_LIMIT = 28;
-    uint256 constant DAYS_MINT_UPPER_LIMIT = 365;
+
+    /// @notice contract that validates if wiki should be pushed
+    Wiki private wiki;
 
     /// -----------------------------------------------------------------------
     /// Variables
     /// -----------------------------------------------------------------------
 
-    string public baseTokenURI;
     Counters.Counter private passIdTracker;
+    uint256 MINT_LOWER_LIMIT = 28;
+    uint256 MINT_UPPER_LIMIT = 365;
 
     /// -----------------------------------------------------------------------
     /// Constructor
     /// -----------------------------------------------------------------------
 
-    constructor(address IqAddr) ERC721("BAINPASS", "BEP") Owned(msg.sender) {
+    constructor(address IqAddr, address wikiAddr) ERC721("BAINPASS", "BEP") {
         iqToken = IqAddr;
         passIdTracker.increment();
+        wiki = Wiki(wikiAddr);
     }
 
     /// -----------------------------------------------------------------------
     /// External functions
     /// -----------------------------------------------------------------------
 
+    function pause() public onlyOwner {
+        _pause();
+    }
+
+    function unpause() public onlyOwner {
+        _unpause();
+    }
+
+    /// @notice Change the MintLimit for the Nfts
+    /// @param lowerLimit the new lower limit for how short a nft can be subscribed for
+    /// @param upperLimit  the new upper limit for how long a nft can be subscribed for
+    function configureMintLimit(
+        uint256 lowerLimit,
+        uint256 upperLimit
+    ) external onlyOwner {
+        MINT_UPPER_LIMIT = upperLimit;
+        MINT_LOWER_LIMIT = lowerLimit;
+    }
+
     /// @notice Add a new Pass Type
     /// @param pricePerDay the price per day of the new pass type
-    /// @param tokenURI the link that stores the data of all the Nfts in the new pass
+    /// @param tokenUri the link that stores the data of all the Nfts in the new pass
     /// @param name the name of the new pass type to be added
     /// @param maxTokens the total number of tokens in the pass
     /// @param discount the amount in % to be deducted when buying the pass
     function addPassType(
         uint256 pricePerDay,
-        string memory tokenURI,
+        string memory tokenUri,
         string memory name,
         uint256 maxTokens,
         uint256 discount
@@ -126,10 +155,11 @@ contract BrainPassCollectibles is ERC721, Owned {
             passId,
             name,
             pricePerDay,
-            tokenURI,
+            tokenUri,
             maxTokens,
             discount,
-            0,
+            passTypes[passId - 1].currentNftCount,
+            passTypes[passId - 1].currentNftCount + maxTokens,
             false
         );
         passIdTracker.increment();
@@ -149,7 +179,8 @@ contract BrainPassCollectibles is ERC721, Owned {
             passType.tokenURI,
             passType.maxTokens,
             passType.discount,
-            passType.discount,
+            passType.lastTokenIdMinted,
+            passType.currentNftCount,
             true
         );
 
@@ -172,7 +203,7 @@ contract BrainPassCollectibles is ERC721, Owned {
         PassType storage passType = passTypes[passId];
 
         if (passType.isPaused) revert CannotMintPausedPassType();
-        if (passType.lastTokenIdMinted >= passType.maxTokens)
+        if (passType.lastTokenIdMinted >= passType.currentNftCount)
             revert PassMaxSupplyReached();
 
         if (!validatePassDuration(startTimestamp, endTimestamp))
@@ -180,7 +211,7 @@ contract BrainPassCollectibles is ERC721, Owned {
 
         uint256 price = calculatePrice(passId, startTimestamp, endTimestamp);
 
-        bool success = IERC20(iqToken).transferFrom(msg.sender, owner, price);
+        bool success = IERC20(iqToken).transferFrom(msg.sender, owner(), price);
         if (!success) revert MintingPaymentFailed();
 
         uint256 tokenId = passType.lastTokenIdMinted + 1;
@@ -194,8 +225,8 @@ contract BrainPassCollectibles is ERC721, Owned {
         ownerOfToken[passId][msg.sender] = purchase;
         passType.lastTokenIdMinted = tokenId;
 
-        setBaseURI(passType.tokenURI);
         _safeMint(msg.sender, tokenId);
+        _setTokenURI(tokenId, passType.tokenURI);
 
         emit BrainPassBought(
             msg.sender,
@@ -228,7 +259,7 @@ contract BrainPassCollectibles is ERC721, Owned {
             revert DurationNotInTimeFrame();
 
         uint256 price = calculatePrice(pass.passId, newStartTime, newEndTime);
-        bool success = IERC20(iqToken).transferFrom(msg.sender, owner, price);
+        bool success = IERC20(iqToken).transferFrom(msg.sender, owner(), price);
         if (!success) revert IncreseTimePaymentFailed();
 
         UserPassItem memory purchase = UserPassItem(
@@ -277,18 +308,16 @@ contract BrainPassCollectibles is ERC721, Owned {
         uint256 endTimestamp
     ) internal view returns (uint256) {
         PassType memory passType = passTypes[passId];
-        uint256 subscriptionPeriodInSeconds = endTimestamp.sub(startTimestamp);
+        uint256 subscriptionPeriodInSeconds = endTimestamp - startTimestamp;
 
-        uint256 subscriptionPeriodInDays = subscriptionPeriodInSeconds.div(
-            SECONDS_IN_A_DAY
-        );
+        uint256 subscriptionPeriodInDays = subscriptionPeriodInSeconds / 1 days;
 
         // Calculate the total price
-        uint256 totalPrice = subscriptionPeriodInDays.mul(passType.pricePerDay);
+        uint256 totalPrice = subscriptionPeriodInDays * passType.pricePerDay;
 
         if (passType.discount > 0) {
-            uint256 discountAmount = totalPrice.mul(passType.discount).div(100);
-            totalPrice = totalPrice.sub(discountAmount);
+            uint256 discountAmount = (totalPrice * passType.discount) / (100);
+            totalPrice = totalPrice - discountAmount;
         }
 
         return totalPrice;
@@ -300,21 +329,16 @@ contract BrainPassCollectibles is ERC721, Owned {
     function validatePassDuration(
         uint256 startTimestamp,
         uint256 endTimestamp
-    ) internal pure returns (bool) {
-        uint256 durationInDays = (endTimestamp.sub(startTimestamp)) /
-            SECONDS_IN_A_DAY;
+    ) internal view returns (bool) {
+        uint256 durationInDays = (endTimestamp - startTimestamp) / 1 days;
         return
-            durationInDays >= DAYS_MINT_LOWER_LIMIT &&
-            durationInDays <= DAYS_MINT_UPPER_LIMIT;
+            durationInDays >= MINT_LOWER_LIMIT &&
+            durationInDays <= MINT_UPPER_LIMIT;
     }
 
     /// -----------------------------------------------------------------------
     /// Getters
     /// -----------------------------------------------------------------------
-
-    function _baseURI() internal view virtual override returns (string memory) {
-        return baseTokenURI;
-    }
 
     /// @notice Gets all the NFT owned by an address
     /// @param user The address of the user
@@ -347,13 +371,41 @@ contract BrainPassCollectibles is ERC721, Owned {
     }
 
     /// -----------------------------------------------------------------------
-    /// Setters
+    /// Override Functions
     /// -----------------------------------------------------------------------
 
-    /// @notice Sets the tokenURI where the NFT data is gotten
-    /// @param tokenURI The tokenURI to be set
-    function setBaseURI(string memory tokenURI) public {
-        baseTokenURI = tokenURI;
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal override(ERC721, ERC721Enumerable) {
+        super._beforeTokenTransfer(from, to, tokenId);
+    }
+
+    function _burn(
+        uint256 tokenId
+    ) internal override(ERC721, ERC721URIStorage) {
+        super._burn(tokenId);
+    }
+
+    function tokenURI(
+        uint256 tokenId
+    ) public view override(ERC721, ERC721URIStorage) returns (string memory) {
+        return super.tokenURI(tokenId);
+    }
+
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override(ERC721, ERC721Enumerable) returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
+
+    modifier updateReward(uint256 passId, address account) {
+        UserPassItem memory userItem = ownerOfToken[passId][account];
+        if (userItem.endTimestamp > block.timestamp) {
+           //unwhitelist address here
+        }
+        _;
     }
 
     /// -----------------------------------------------------------------------
