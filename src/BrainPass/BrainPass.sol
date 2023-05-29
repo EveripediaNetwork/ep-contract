@@ -38,7 +38,7 @@ contract BrainPassCollectibles is
 
     error MintingPaymentFailed();
     error IncreseTimePaymentFailed();
-    error AlreadyMintedThisPass();
+    error AlreadyMintedAPass();
     error NotTheOwnerOfThisNft();
     error InvalidMaxTokensForAPass();
     error PassTypeNotFound();
@@ -82,9 +82,7 @@ contract BrainPassCollectibles is
     /// -----------------------------------------------------------------------
 
     mapping(uint256 => PassType) public passTypes;
-    mapping(address => mapping(uint256 => UserPassItem))
-        public addressToNFTPass;
-    mapping(uint256 => mapping(address => UserPassItem)) internal ownerOfToken;
+    mapping(address => UserPassItem) public addressToNFTPass;
 
     /// -----------------------------------------------------------------------
     /// Constant
@@ -194,8 +192,8 @@ contract BrainPassCollectibles is
         uint256 endTimestamp
     ) external {
         if (passId >= passIdTracker.current()) revert PassTypeNotFound();
-        if (getUserPassDetails(msg.sender, passId).tokenId != 0)
-            revert AlreadyMintedThisPass();
+        if (addressToNFTPass[msg.sender].tokenId != 0)
+            revert AlreadyMintedAPass();
         PassType storage passType = passTypes[passId];
 
         if (passType.isPaused) revert CannotMintPausedPassType();
@@ -216,8 +214,7 @@ contract BrainPassCollectibles is
             startTimestamp,
             endTimestamp
         );
-        addressToNFTPass[msg.sender][tokenId] = purchase;
-        ownerOfToken[passId][msg.sender] = purchase;
+        addressToNFTPass[msg.sender] = purchase;
         passType.lastTokenIdMinted = tokenId;
 
         _safeMint(msg.sender, tokenId);
@@ -236,12 +233,12 @@ contract BrainPassCollectibles is
     /// @param tokenId The Id of the NFT whose time is to be increased
     /// @param newEndTime The new subcription endTime for the of the NFT
     function increaseEndTime(uint256 tokenId, uint256 newEndTime) external {
-        UserPassItem memory pass = addressToNFTPass[msg.sender][tokenId];
+        UserPassItem memory pass = addressToNFTPass[msg.sender];
 
         PassType storage passType = passTypes[pass.passId];
         if (passType.isPaused) revert CannotMintPausedPassType();
 
-        if (getUserPassDetails(msg.sender, pass.passId).tokenId != tokenId)
+        if (addressToNFTPass[msg.sender].tokenId != tokenId)
             revert NotTheOwnerOfThisNft();
         uint256 newStartTime;
         if (pass.endTimestamp < block.timestamp) {
@@ -264,8 +261,7 @@ contract BrainPassCollectibles is
             newEndTime
         );
 
-        addressToNFTPass[msg.sender][tokenId] = purchase;
-        ownerOfToken[pass.passId][msg.sender] = purchase;
+        addressToNFTPass[msg.sender] = purchase;
 
         emit TimeIncreased(
             msg.sender,
@@ -337,12 +333,10 @@ contract BrainPassCollectibles is
 
     /// @notice Gets all the NFT owned by an address
     /// @param user The address of the user
-    /// @param passId The Id of the pass to get the user's info on
     function getUserPassDetails(
-        address user,
-        uint passId
+        address user
     ) public view returns (UserPassItem memory) {
-        UserPassItem memory userToken = ownerOfToken[passId][user];
+        UserPassItem memory userToken = addressToNFTPass[user];
         return userToken;
     }
 
