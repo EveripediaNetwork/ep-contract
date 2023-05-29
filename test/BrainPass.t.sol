@@ -72,7 +72,7 @@ contract BrainPassTest is PRBTest, Cheats {
     }
 
     function testCannotMintPausedPass() public {
-        BrainPass.pausePassType(1);
+        BrainPass.togglePassTypeStatus(1);
         mockERC20.mint(alice, 20000e18);
         vm.startPrank(alice);
         mockERC20.approve(address(BrainPass), 9000e18);
@@ -98,7 +98,7 @@ contract BrainPassTest is PRBTest, Cheats {
         vm.stopPrank();
     }
 
-    function testdiffmintNFT() public {
+    function testDifferentPassMint() public {
         BrainPass.addPassType(
             15e18,
             "http://example.orgs",
@@ -110,14 +110,15 @@ contract BrainPassTest is PRBTest, Cheats {
         mockERC20.mint(alice, 20000e18);
         vm.startPrank(alice);
         mockERC20.approve(address(BrainPass), 20000e18);
-        BrainPass.mintNFT(1, 172800, 5184000);
-        console.log(BrainPass.tokenURI(1));
-        BrainPass.mintNFT(2, 172800, 5184000);
+        BrainPass.mintNFT(1, 172800, 5184000); //"http://example.com"
+        uint256 firstId = BrainPass.getUserPassDetails(alice, 1).tokenId;
+        console.log(BrainPass.tokenURI(firstId), firstId);
+        BrainPass.mintNFT(2, 172800, 5184000); // "http://example.orgs",
         uint256 newId = BrainPass.getUserPassDetails(alice, 2).tokenId;
-        console.log(BrainPass.tokenURI(newId));
-        BrainPass.mintNFT(3, 172800, 5184000);
+        console.log(BrainPass.tokenURI(newId), newId);
+        BrainPass.mintNFT(3, 172800, 5184000); //"http://oleanji.com"
         uint256 newIds = BrainPass.getUserPassDetails(alice, 3).tokenId;
-        console.log(BrainPass.tokenURI(newIds));
+        console.log(BrainPass.tokenURI(newIds), newIds);
         uint256 mintedPass = BrainPass.getUserPassDetails(alice, 2).tokenId;
         assertEq(mintedPass, 201);
         vm.stopPrank();
@@ -202,4 +203,6 @@ contract BrainPassTest is PRBTest, Cheats {
         vm.expectRevert(BrainPassCollectibles.NoEtherLeftToWithdraw.selector);
         BrainPass.withdraw();
     }
+
+    //configureMintLimit
 }

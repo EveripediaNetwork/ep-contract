@@ -92,9 +92,6 @@ contract BrainPassCollectibles is
 
     address public iqToken;
 
-    /// @notice contract that validates if wiki should be pushed
-    Wiki private wiki;
-
     /// -----------------------------------------------------------------------
     /// Variables
     /// -----------------------------------------------------------------------
@@ -107,21 +104,20 @@ contract BrainPassCollectibles is
     /// Constructor
     /// -----------------------------------------------------------------------
 
-    constructor(address IqAddr, address wikiAddr) ERC721("BAINPASS", "BEP") {
+    constructor(address IqAddr) ERC721("BAINPASS", "BEP") {
         iqToken = IqAddr;
         passIdTracker.increment();
-        wiki = Wiki(wikiAddr);
     }
 
     /// -----------------------------------------------------------------------
     /// External functions
     /// -----------------------------------------------------------------------
 
-    function pause() public onlyOwner {
+    function pause() external onlyOwner {
         _pause();
     }
 
-    function unpause() public onlyOwner {
+    function unpause() external onlyOwner {
         _unpause();
     }
 
@@ -168,9 +164,10 @@ contract BrainPassCollectibles is
 
     /// @notice Pause a Pass Type
     /// @param passId the Id of the pass to be deactivated
-    function pausePassType(uint256 passId) external onlyOwner {
+    function togglePassTypeStatus(uint256 passId) external onlyOwner {
         if (passId >= passIdTracker.current()) revert PassTypeNotFound();
         PassType storage passType = passTypes[passId];
+        bool newStatus = !passType.isPaused;
 
         passTypes[passId] = PassType(
             passType.passId,
@@ -181,7 +178,7 @@ contract BrainPassCollectibles is
             passType.discount,
             passType.lastTokenIdMinted,
             passType.currentNftCount,
-            true
+            newStatus
         );
 
         emit PassTypePaused(passId, passType.name);
@@ -199,13 +196,11 @@ contract BrainPassCollectibles is
         if (passId >= passIdTracker.current()) revert PassTypeNotFound();
         if (getUserPassDetails(msg.sender, passId).tokenId != 0)
             revert AlreadyMintedThisPass();
-
         PassType storage passType = passTypes[passId];
 
         if (passType.isPaused) revert CannotMintPausedPassType();
         if (passType.lastTokenIdMinted >= passType.currentNftCount)
             revert PassMaxSupplyReached();
-
         if (!validatePassDuration(startTimestamp, endTimestamp))
             revert DurationNotInTimeFrame();
 
@@ -293,7 +288,7 @@ contract BrainPassCollectibles is
 
         (bool success, ) = (msg.sender).call{value: ethbalance}("");
         if (!success) revert TransferFailed();
-    }
+    } // make this as two func
 
     /// -----------------------------------------------------------------------
     /// Internal Functions
@@ -398,14 +393,6 @@ contract BrainPassCollectibles is
         bytes4 interfaceId
     ) public view override(ERC721, ERC721Enumerable) returns (bool) {
         return super.supportsInterface(interfaceId);
-    }
-
-    modifier updateReward(uint256 passId, address account) {
-        UserPassItem memory userItem = ownerOfToken[passId][account];
-        if (userItem.endTimestamp > block.timestamp) {
-           //unwhitelist address here
-        }
-        _;
     }
 
     /// -----------------------------------------------------------------------
