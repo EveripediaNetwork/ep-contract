@@ -112,3 +112,44 @@ The contract emits the following events:
 ## PICTORAL EXPLANATION
 ![image](https://github.com/EveripediaNetwork/ep-contract/assets/75235148/eee4d631-28d9-4ca4-bc0e-62e5a02998a2)
 
+# Token ID Assignment Scenario
+
+In this scenario, we will discuss how token IDs are assigned when adding new PassTypes to a system. The goal is to ensure a single ID counter for all tokens while maintaining unique IDs for each PassType.
+
+## OleanjiPass
+
+Existing PassType: OleanjiPass
+- Name: "OleanjiPass"
+- Max Tokens: 10
+- Last Token Minted: 0
+- Current NFT Count: 10
+
+For the OleanjiPass PassType, the last token that was minted has an ID of 10, and there are currently a total of 10 tokens minted for this PassType.
+
+## KesarPass
+
+New PassType: KesarPass
+- Name: "KesarPass"
+- Max Tokens: 15
+- Last Token Minted: 10
+- Current NFT Count: 25
+
+Since the last token minted for OleanjiPass is 10, we want to start counting the tokens for KesarPass from where OleanjiPass left off.
+
+For the KesarPass, if a token is minted, it will have an ID of 11 since it follows the lastTokenMinted of OleanjiPass, which was 10. The currentNftCount for KesarPass will be updated to 25, indicating that there are now a total of 25 tokens minted for this PassType.
+
+Therefore, the token IDs for KesarPass will range from 11 to 25. The corresponding URLs for these tokens would be as follows:
+
+- [https://oleanjiPass.com/1](https://oleanjiPass.com/1)
+- [https://oleanjiPass.com/2](https://oleanjiPass.com/2)
+- ...
+- [https://oleanjiPass.com/10](https://oleanjiPass.com/10)
+- [https://KesarPass.com/11](https://KesarPass.com/11)
+- [https://KesarPass.com/12](https://KesarPass.com/12)
+- ...
+- [https://KesarPass.com/25](https://KesarPass.com/25)
+
+The JSON file for the token data of KesarPass will start from an ID of 11 and go up to 25, reflecting the corresponding token information for each ID.
+
+This approach allows for a consistent numbering sequence across different PassTypes while maintaining unique IDs for each PassType's tokens.
+
