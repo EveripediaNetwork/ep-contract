@@ -162,7 +162,9 @@ contract BrainPassCollectibles is
 
     /// @notice Pause a Pass Type
     /// @param passId the Id of the pass to be deactivated
-    function togglePassTypeStatus(uint256 passId) external onlyOwner whenNotPaused {
+    function togglePassTypeStatus(
+        uint256 passId
+    ) external onlyOwner whenNotPaused {
         if (passId >= passIdTracker.current()) revert PassTypeNotFound();
         PassType storage passType = passTypes[passId];
         bool newStatus = !passType.isPaused;
@@ -232,7 +234,10 @@ contract BrainPassCollectibles is
     /// @notice Increase the time to hold a PassNft
     /// @param tokenId The Id of the NFT whose time is to be increased
     /// @param newEndTime The new subcription endTime for the of the NFT
-    function increaseEndTime(uint256 tokenId, uint256 newEndTime) external whenNotPaused {
+    function increaseEndTime(
+        uint256 tokenId,
+        uint256 newEndTime
+    ) external whenNotPaused {
         UserPassItem memory pass = addressToNFTPass[msg.sender];
 
         PassType storage passType = passTypes[pass.passId];
@@ -272,19 +277,22 @@ contract BrainPassCollectibles is
     }
 
     /// @notice Withdraws any amount in the contract
-    function withdraw() external payable onlyOwner {
-        uint256 tokenBalance = IERC20(iqToken).balanceOf(address(this));
+    function withdrawEther() external payable onlyOwner {
         uint256 ethbalance = address(this).balance;
-
-        if (tokenBalance <= 0) revert NoIQLeftToWithdraw();
         if (ethbalance <= 0) revert NoEtherLeftToWithdraw();
-
-        bool tokenSuccess = IERC20(iqToken).transfer(msg.sender, tokenBalance);
-        if (!tokenSuccess) revert TransferFailed();
 
         (bool success, ) = (msg.sender).call{value: ethbalance}("");
         if (!success) revert TransferFailed();
-    } // make this as two func
+    }
+
+    function withdrawIQ() external payable onlyOwner {
+        uint256 tokenBalance = IERC20(iqToken).balanceOf(address(this));
+
+        if (tokenBalance <= 0) revert NoIQLeftToWithdraw();
+
+        bool tokenSuccess = IERC20(iqToken).transfer(msg.sender, tokenBalance);
+        if (!tokenSuccess) revert TransferFailed();
+    }
 
     /// -----------------------------------------------------------------------
     /// Internal Functions

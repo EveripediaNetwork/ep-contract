@@ -207,12 +207,12 @@ contract BrainPassTest is PRBTest, Cheats {
 
     function testWithdrawTokens() public {
         vm.expectRevert(BrainPassCollectibles.NoIQLeftToWithdraw.selector);
-        BrainPass.withdraw();
+        BrainPass.withdrawIQ();
         assertEq(mockERC20.balanceOf(address(BrainPass)), 0);
         mockERC20.mint(address(BrainPass), 20000e18);
         assertEq(mockERC20.balanceOf(address(BrainPass)), 20000e18);
         vm.expectRevert(BrainPassCollectibles.NoEtherLeftToWithdraw.selector);
-        BrainPass.withdraw();
+        BrainPass.withdrawEther();
     }
 
     function testConfigureMintLimit() public {
