@@ -95,8 +95,8 @@ contract BrainPassCollectibles is
     /// -----------------------------------------------------------------------
 
     Counters.Counter private passIdTracker;
-    uint256 MINT_LOWER_LIMIT = 28;
-    uint256 MINT_UPPER_LIMIT = 365;
+    uint256 public MINT_LOWER_LIMIT = 28;
+    uint256 public MINT_UPPER_LIMIT = 365;
 
     /// -----------------------------------------------------------------------
     /// Constructor
@@ -142,7 +142,7 @@ contract BrainPassCollectibles is
         string memory name,
         uint256 maxTokens,
         uint256 discount
-    ) external onlyOwner {
+    ) external onlyOwner whenNotPaused {
         if (maxTokens <= 0) revert InvalidMaxTokensForAPass();
         uint256 passId = passIdTracker.current();
         passTypes[passId] = PassType(
@@ -162,7 +162,7 @@ contract BrainPassCollectibles is
 
     /// @notice Pause a Pass Type
     /// @param passId the Id of the pass to be deactivated
-    function togglePassTypeStatus(uint256 passId) external onlyOwner {
+    function togglePassTypeStatus(uint256 passId) external onlyOwner whenNotPaused {
         if (passId >= passIdTracker.current()) revert PassTypeNotFound();
         PassType storage passType = passTypes[passId];
         bool newStatus = !passType.isPaused;
@@ -190,7 +190,7 @@ contract BrainPassCollectibles is
         uint256 passId,
         uint256 startTimestamp,
         uint256 endTimestamp
-    ) external {
+    ) external whenNotPaused {
         if (passId >= passIdTracker.current()) revert PassTypeNotFound();
         if (addressToNFTPass[msg.sender].tokenId != 0)
             revert AlreadyMintedAPass();
@@ -232,7 +232,7 @@ contract BrainPassCollectibles is
     /// @notice Increase the time to hold a PassNft
     /// @param tokenId The Id of the NFT whose time is to be increased
     /// @param newEndTime The new subcription endTime for the of the NFT
-    function increaseEndTime(uint256 tokenId, uint256 newEndTime) external {
+    function increaseEndTime(uint256 tokenId, uint256 newEndTime) external whenNotPaused {
         UserPassItem memory pass = addressToNFTPass[msg.sender];
 
         PassType storage passType = passTypes[pass.passId];

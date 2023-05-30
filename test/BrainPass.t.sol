@@ -215,7 +215,26 @@ contract BrainPassTest is PRBTest, Cheats {
         BrainPass.withdraw();
     }
 
-   
+    function testConfigureMintLimit() public {
+        assertEq(BrainPass.MINT_LOWER_LIMIT(), 28);
+        assertEq(BrainPass.MINT_UPPER_LIMIT(), 365);
+        BrainPass.configureMintLimit(50, 730);
+        assertEq(BrainPass.MINT_LOWER_LIMIT(), 50);
+        assertEq(BrainPass.MINT_UPPER_LIMIT(), 730);
+    }
 
-    //configureMintLimit
+    function testPauseAndUnPauseContract() public {
+        BrainPass.pause();
+        vm.startPrank(alice);
+        vm.expectRevert("Pausable: paused");
+        BrainPass.mintNFT(1, 172800, 5184000);
+        vm.stopPrank();
+        BrainPass.unpause();
+        mockERC20.mint(alice, 20000e18);
+        vm.startPrank(alice);
+        mockERC20.approve(address(BrainPass), 19700e18);
+        assertEq(BrainPass.balanceOf(alice), 0);
+        BrainPass.mintNFT(1, 172800, 5184000);
+        assertEq(BrainPass.balanceOf(alice), 1);
+    }
 }
