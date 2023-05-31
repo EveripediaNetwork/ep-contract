@@ -116,10 +116,6 @@ contract BrainPassCollectibles is ERC721, Pausable, Ownable {
         _unpause();
     }
 
-    function _baseURI() internal view virtual override returns (string memory) {
-        return baseTokenURI;
-    }
-
     function setBaseURI(string memory _baseTokenURI) public onlyOwner {
         baseTokenURI = _baseTokenURI;
     }
@@ -337,6 +333,11 @@ contract BrainPassCollectibles is ERC721, Pausable, Ownable {
     /// -----------------------------------------------------------------------
     /// Getters
     /// -----------------------------------------------------------------------
+
+    /// @notice Gets the tokenUri for the contract
+    function _baseURI() internal view virtual override returns (string memory) {
+        return baseTokenURI;
+    }
 
     /// @notice Gets all the NFT owned by an address
     /// @param user The address of the user

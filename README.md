@@ -64,7 +64,6 @@ Only the contract owner can call this function.
 ## `addPassType()`
 Adds a new pass type.
 - `pricePerDay`: Price per day of the new pass type.
-- `tokenUri`: URI that stores the data of all the NFTs in the new pass.
 - `name`: Name of the new pass type.
 - `maxTokens`: Total number of tokens in the pass.
 - `discount`: Discount amount (in percentage) to be deducted when buying the pass.
