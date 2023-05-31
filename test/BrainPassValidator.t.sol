@@ -19,23 +19,48 @@ contract BrainPassValidatorTest is PRBTest, Cheats {
 
     function setUp() public {
         mockERC20 = new MockERC20("Mock IQ Token", "MIT", 18); //mocking IQ token
-        BrainPass = new BrainPassCollectibles(address(mockERC20), "http://example.com");
+        BrainPass = new BrainPassCollectibles(
+            address(mockERC20),
+            "http://example.com"
+        );
         brainPassValidator = new BrainPassValidiator(address(BrainPass));
-        BrainPass.addPassType(15e18,"Gold", 200, 0);
+        BrainPass.addPassType(15e18, "Gold", 200, 0);
     }
 
-    function testPostWiki() public {
+    function testPostWikiUserWithNoPass() public {
         vm.expectRevert(BrainPassValidiator.UserDoesNotHaveAPass.selector);
         brainPassValidator.validate(alice);
+    }
+
+    function testPostWikiRight() public {
         mockERC20.mint(alice, 20000e18);
         vm.startPrank(alice);
         mockERC20.approve(address(BrainPass), 1700e18);
         BrainPass.mintNFT(1, 1685638993, 1693587793); // june 1st - sept 1st (3 months)
+        assertEq(brainPassValidator.validate(alice), true);
+        vm.stopPrank();
+    }
+
+    function testPostWikiPassExpired() public {
+        mockERC20.mint(alice, 20000e18);
+        vm.startPrank(alice);
+        mockERC20.approve(address(BrainPass), 1700e18);
+        BrainPass.mintNFT(1, 1685638993, 1693587793);
+        assertEq(brainPassValidator.validate(alice), true);
+        skip(1685638993 + 7948800);
+        vm.expectRevert(BrainPassValidiator.UserPassExpired.selector);
+        brainPassValidator.validate(alice);
+    }
+
+    function testPostWikiWithPausedPass() public {
+        mockERC20.mint(alice, 20000e18);
+        vm.startPrank(alice);
+        mockERC20.approve(address(BrainPass), 1700e18);
+        BrainPass.mintNFT(1, 1685638993, 1693587793);
         vm.stopPrank();
         assertEq(brainPassValidator.validate(alice), true);
-        skip(1685638993 + 7948800); //skipped from the start date till the end of the 3 months
-        console.log(block.timestamp);
-        vm.expectRevert(BrainPassValidiator.UserPassExpired.selector);
+        BrainPass.togglePassTypeStatus(1);
+        vm.expectRevert(BrainPassCollectibles.PassTypeIsPaused.selector);
         brainPassValidator.validate(alice);
     }
 }

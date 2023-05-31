@@ -74,7 +74,7 @@ contract BrainPassTest is PRBTest, Cheats {
         vm.startPrank(alice);
         mockERC20.approve(address(BrainPass), 9000e18);
         vm.expectRevert(
-            BrainPassCollectibles.CannotMintPausedPassType.selector
+            BrainPassCollectibles.PassTypeIsPaused.selector
         );
         BrainPass.mintNFT(1, 172800, 5184000);
     }

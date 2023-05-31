@@ -38,7 +38,7 @@ contract BrainPassCollectibles is ERC721, Pausable, Ownable {
     error NoEtherLeftToWithdraw();
     error TransferFailed();
     error DurationNotInTimeFrame();
-    error CannotMintPausedPassType();
+    error PassTypeIsPaused();
     error NoIQLeftToWithdraw();
 
     /// -----------------------------------------------------------------------
@@ -197,7 +197,7 @@ contract BrainPassCollectibles is ERC721, Pausable, Ownable {
             revert AlreadyMintedAPass();
         PassType storage passType = passTypes[passId];
 
-        if (passType.isPaused) revert CannotMintPausedPassType();
+        if (passType.isPaused) revert PassTypeIsPaused();
         if (passType.lastMintedId >= passType.maxTokens)
             revert PassMaxSupplyReached();
         if (!validatePassDuration(startTimestamp, endTimestamp))
@@ -240,7 +240,7 @@ contract BrainPassCollectibles is ERC721, Pausable, Ownable {
         UserPassItem memory pass = addressToNFTPass[msg.sender];
 
         PassType storage passType = passTypes[pass.passId];
-        if (passType.isPaused) revert CannotMintPausedPassType();
+        if (passType.isPaused) revert PassTypeIsPaused();
 
         if (addressToNFTPass[msg.sender].tokenId != tokenId)
             revert NotTheOwnerOfThisNft();
@@ -344,6 +344,8 @@ contract BrainPassCollectibles is ERC721, Pausable, Ownable {
         address user
     ) public view returns (UserPassItem memory) {
         UserPassItem memory userToken = addressToNFTPass[user];
+        PassType storage passType = passTypes[userToken.passId];
+        if (passType.isPaused) revert PassTypeIsPaused();
         return userToken;
     }
 
