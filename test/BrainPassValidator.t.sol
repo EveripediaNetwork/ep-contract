@@ -19,9 +19,9 @@ contract BrainPassValidatorTest is PRBTest, Cheats {
 
     function setUp() public {
         mockERC20 = new MockERC20("Mock IQ Token", "MIT", 18); //mocking IQ token
-        BrainPass = new BrainPassCollectibles(address(mockERC20));
+        BrainPass = new BrainPassCollectibles(address(mockERC20), "http://example.com");
         brainPassValidator = new BrainPassValidiator(address(BrainPass));
-        BrainPass.addPassType(15e18, "http://example.com", "Gold", 200, 0);
+        BrainPass.addPassType(15e18,"Gold", 200, 0);
     }
 
     function testPostWiki() public {
