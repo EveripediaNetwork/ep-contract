@@ -116,18 +116,21 @@ contract BrainPassTest is PRBTest, Cheats {
         mockERC20.approve(address(BrainPass), 20000e18);
         BrainPass.mintNFT(1, 172800, 5184000); //"http://example.com"
         uint256 firstId = BrainPass.getUserPassDetails(alice).tokenId;
+        assertEq(BrainPass.tokenURI(firstId), "http://example.com");
         console.log(BrainPass.tokenURI(firstId), firstId);
         vm.stopPrank();
         vm.startPrank(doe);
         mockERC20.approve(address(BrainPass), 20000e18);
         BrainPass.mintNFT(2, 172800, 5184000); // "http://example.orgs",
         uint256 newId = BrainPass.getUserPassDetails(doe).tokenId;
+        assertEq(BrainPass.tokenURI(newId), "http://example.orgs");
         console.log(BrainPass.tokenURI(newId), newId);
         vm.stopPrank();
         vm.startPrank(bob);
         mockERC20.approve(address(BrainPass), 20000e18);
         BrainPass.mintNFT(3, 172800, 5184000); //"http://oleanji.com"
         uint256 newIds = BrainPass.getUserPassDetails(bob).tokenId;
+        assertEq(BrainPass.tokenURI(newIds), "http://oleanji.com");
         console.log(BrainPass.tokenURI(newIds), newIds);
         uint256 mintedPass = BrainPass.getUserPassDetails(doe).tokenId;
         console.log(BrainPass.balanceOf(alice));

@@ -160,8 +160,8 @@ contract BrainPassCollectibles is
         emit NewPassAdded(passId, name, maxTokens, pricePerDay);
     }
 
-    /// @notice Pause a Pass Type
-    /// @param passId the Id of the pass to be deactivated
+    /// @notice Toggles the staus of a pass type (paused or unpaused)
+    /// @param passId the Id of the pass 
     function togglePassTypeStatus(
         uint256 passId
     ) external onlyOwner whenNotPaused {
@@ -181,7 +181,7 @@ contract BrainPassCollectibles is
             newStatus
         );
 
-        emit PassTypePaused(passId, passType.name);
+        emit PassTypeStatusToggled(passId, passType.name);
     }
 
     /// @notice Mint and NFT of a particular passtype
@@ -423,5 +423,5 @@ contract BrainPassCollectibles is
         uint256 _pricePerDay
     );
 
-    event PassTypePaused(uint256 indexed _passId, string _name);
+    event PassTypeStatusToggled(uint256 indexed _passId, string _name);
 }

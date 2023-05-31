@@ -68,26 +68,31 @@ Adds a new pass type.
 - `name`: Name of the new pass type.
 - `maxTokens`: Total number of tokens in the pass.
 - `discount`: Discount amount (in percentage) to be deducted when buying the pass.
-Only the contract owner can call this function.
+Only the contract owner can call this function and only when the contract is not paused 
 
-## `pausePassType()`
-Pauses a specific pass type.
+## `togglePassTypeStatus()`
+toggles the status of a specific pass type from paused to unpaused.
 - `passId`: ID of the pass type to be deactivated.
-Only the contract owner can call this function.
+Only the contract owner can call this function and only when the contract is not paused 
 
 ## `mintNFT()`
 Mints an NFT of a particular pass type.
 - `passId`: ID of the pass type to mint.
 - `startTimestamp`: Time when the NFT subscription starts.
 - `endTimestamp`: Time when the NFT subscription ends.
+Can call this function  only when the contract is not paused 
 
 ## `increaseEndTime()`
-Increases the subscription time of an NFT.
+Increases the EndTime time of an NFT.
 - `tokenId`: ID of the NFT whose time is to be increased.
 - `newEndTime`: New subscription end time for the NFT.
+Only when the contrasct is not paused can this function be called.
 
-## `withdraw()`
-Withdraws any amount of IQ tokens and Ether held in the contract. Can only be called by the contract owner.
+## `withdrawEther()`
+Withdraws any amount of Ether held in the contract. Can only be called by the contract owner.
+
+## `withdrawIQ()`
+Withdraws any amount of IQ tokens held in the contract. Can only be called by the contract owner.
 
 ## `getUserPassDetails()`
 Retrieves the details of an NFT owned by a specific user for a given pass type.
@@ -108,6 +113,7 @@ The contract emits the following events:
 - `BrainPassBought`: Emitted when a user buys a BrainPass NFT.
 - `TimeIncreased`: Emitted when the time of a BrainPass NFT is increased.
 - `NewPassAdded`: Emitted when a new pass type is added.
+- `PassTypePaused`: Emitted when a pass is paused.
 
 ## PICTORAL EXPLANATION
 ![image](https://github.com/EveripediaNetwork/ep-contract/assets/75235148/eee4d631-28d9-4ca4-bc0e-62e5a02998a2)
