@@ -72,7 +72,7 @@ contract BrainPassCollectibles is ERC721, Pausable, Ownable {
     /// -----------------------------------------------------------------------
 
     mapping(uint256 => PassType) public passTypes;
-    mapping(address => UserPassItem) public addressToNFTPass;
+    mapping(address => UserPassItem) internal addressToNFTPass;
 
     /// -----------------------------------------------------------------------
     /// Constant
@@ -354,7 +354,7 @@ contract BrainPassCollectibles is ERC721, Pausable, Ownable {
     function getAllPassType() external view returns (PassType[] memory) {
         uint256 total = passIdTracker.current();
         PassType[] memory passType = new PassType[](total);
-        for (uint256 i = 0; i < total; i++) {
+        for (uint256 i = 1; i < total; i++) {
             passType[i] = passTypes[i];
         }
         return passType;

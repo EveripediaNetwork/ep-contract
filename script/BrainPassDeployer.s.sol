@@ -14,11 +14,11 @@ contract BrainPassDeployer is Script {
         vm.startBroadcast();
 
         console.log("Deploying Brainpass deployer....");
-        BrainPassCollectibles validator = new BrainPassCollectibles(
+        BrainPassCollectibles brainPass = new BrainPassCollectibles(
             0x5E959c60f86D17fb7D764AB69B654227d464E820,
             "http://example.com"
         );
-        console.log("Brainpass Deployed", address(validator));
+        console.log("Brainpass Deployed", address(brainPass));
 
         vm.stopBroadcast();
     }
