@@ -325,6 +325,9 @@ contract BrainPassCollectibles is ERC721, Pausable, Ownable {
         uint256 endTimestamp
     ) internal view returns (bool) {
         uint256 durationInDays = (endTimestamp - startTimestamp) / 1 days;
+        if (endTimestamp < block.timestamp) {
+            revert DurationNotInTimeFrame();
+        }
         return
             durationInDays >= MINT_LOWER_LIMIT &&
             durationInDays <= MINT_UPPER_LIMIT;
