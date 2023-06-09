@@ -24,10 +24,10 @@ interface IERC20 {
 /// @notice A pass for IQ Wiki Editors
 
 contract BrainPassCollectibles is ERC721, Pausable, Ownable {
+    
     /// -----------------------------------------------------------------------
     /// Errors
     /// -----------------------------------------------------------------------
-
     error MintingPaymentFailed();
     error IncreseTimePaymentFailed();
     error AlreadyMintedAPass();
@@ -35,11 +35,11 @@ contract BrainPassCollectibles is ERC721, Pausable, Ownable {
     error InvalidMaxTokensForAPass();
     error PassTypeNotFound();
     error PassMaxSupplyReached();
-    error NoEtherLeftToWithdraw();
+    error EtherNotEnoughToWithdraw();
     error TransferFailed();
     error DurationNotInTimeFrame();
     error PassTypeIsPaused();
-    error NoIQLeftToWithdraw();
+    error IQNotEnoughToWithdraw();
 
     /// -----------------------------------------------------------------------
     ///  Inheritances
@@ -201,7 +201,11 @@ contract BrainPassCollectibles is ERC721, Pausable, Ownable {
 
         uint256 price = calculatePrice(passId, startTimestamp, endTimestamp);
 
-        bool success = IERC20(iqToken).transferFrom(msg.sender, owner(), price);
+        bool success = IERC20(iqToken).transferFrom(
+            msg.sender,
+            address(this),
+            price
+        );
         if (!success) revert MintingPaymentFailed();
 
         uint256 tokenId = tokenIdTracker.current();
@@ -235,7 +239,7 @@ contract BrainPassCollectibles is ERC721, Pausable, Ownable {
     ) external whenNotPaused {
         UserPassItem memory pass = addressToNFTPass[msg.sender];
 
-        PassType storage passType = passTypes[pass.passId];
+        PassType memory passType = passTypes[pass.passId];
         if (passType.isPaused) revert PassTypeIsPaused();
 
         if (addressToNFTPass[msg.sender].tokenId != tokenId)
@@ -251,7 +255,11 @@ contract BrainPassCollectibles is ERC721, Pausable, Ownable {
             revert DurationNotInTimeFrame();
 
         uint256 price = calculatePrice(pass.passId, newStartTime, newEndTime);
-        bool success = IERC20(iqToken).transferFrom(msg.sender, owner(), price);
+        bool success = IERC20(iqToken).transferFrom(
+            msg.sender,
+            address(this),
+            price
+        );
         if (!success) revert IncreseTimePaymentFailed();
 
         UserPassItem memory purchase = UserPassItem(
@@ -272,20 +280,23 @@ contract BrainPassCollectibles is ERC721, Pausable, Ownable {
     }
 
     /// @notice Withdraws any amount in the contract
-    function withdrawEther() external payable onlyOwner {
+    function withdrawEther(
+        address receiver,
+        uint256 amount
+    ) external payable onlyOwner {
         uint256 ethbalance = address(this).balance;
-        if (ethbalance <= 0) revert NoEtherLeftToWithdraw();
-
-        (bool success, ) = (msg.sender).call{value: ethbalance}("");
+        if (ethbalance < amount) revert EtherNotEnoughToWithdraw();
+        (bool success, ) = (receiver).call{value: amount}("");
         if (!success) revert TransferFailed();
     }
 
-    function withdrawIQ() external payable onlyOwner {
+    function withdrawIQ(
+        address receiver,
+        uint256 amount
+    ) external payable onlyOwner {
         uint256 tokenBalance = IERC20(iqToken).balanceOf(address(this));
-
-        if (tokenBalance <= 0) revert NoIQLeftToWithdraw();
-
-        bool tokenSuccess = IERC20(iqToken).transfer(msg.sender, tokenBalance);
+        if (tokenBalance < amount) revert IQNotEnoughToWithdraw();
+        bool tokenSuccess = IERC20(iqToken).transfer(receiver, amount);
         if (!tokenSuccess) revert TransferFailed();
     }
 
@@ -348,8 +359,7 @@ contract BrainPassCollectibles is ERC721, Pausable, Ownable {
         address user
     ) public view returns (UserPassItem memory) {
         UserPassItem memory userToken = addressToNFTPass[user];
-        PassType storage passType = passTypes[userToken.passId];
-        if (passType.isPaused) revert PassTypeIsPaused();
+        PassType memory passType = passTypes[userToken.passId];
         return userToken;
     }
 
