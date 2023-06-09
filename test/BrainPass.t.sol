@@ -218,7 +218,11 @@ contract BrainPassTest is PRBTest, Cheats {
         assertEq(BrainPass.balanceOf(alice), 0);
         BrainPass.mintNFT(1, 172800, 5184000);
         assertEq(BrainPass.balanceOf(alice), 1);
+        vm.stopPrank();
+        BrainPass.pause();
+        vm.startPrank(alice);
+        vm.expectRevert("ERC721Pausable: token transfer while paused");
         BrainPass.safeTransferFrom(alice, bob, 1);
-        assertEq(BrainPass.balanceOf(bob), 1);
+        assertEq(BrainPass.balanceOf(bob), 0);
     }
 }

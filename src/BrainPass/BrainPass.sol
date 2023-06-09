@@ -109,8 +109,6 @@ contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
         uint256 amount
     ) internal virtual override(ERC721, ERC721Pausable) {
         super._beforeTokenTransfer(from, to, amount);
-        // if(!paused())
-        // require(, "ERC721Pausable: token transfer while paused");
     }
 
     /// -----------------------------------------------------------------------
