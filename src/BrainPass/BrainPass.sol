@@ -24,7 +24,7 @@ interface IERC20 {
 /// @notice A pass for IQ Wiki Editors
 
 contract BrainPassCollectibles is ERC721, Pausable, Ownable {
-    
+
     /// -----------------------------------------------------------------------
     /// Errors
     /// -----------------------------------------------------------------------
@@ -311,7 +311,7 @@ contract BrainPassCollectibles is ERC721, Pausable, Ownable {
         uint256 passId,
         uint256 startTimestamp,
         uint256 endTimestamp
-    ) internal view returns (uint256) {
+    ) public view returns (uint256) {
         PassType memory passType = passTypes[passId];
         uint256 subscriptionPeriodInSeconds = endTimestamp - startTimestamp;
 
@@ -359,7 +359,6 @@ contract BrainPassCollectibles is ERC721, Pausable, Ownable {
         address user
     ) public view returns (UserPassItem memory) {
         UserPassItem memory userToken = addressToNFTPass[user];
-        PassType memory passType = passTypes[userToken.passId];
         return userToken;
     }
 

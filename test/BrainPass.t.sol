@@ -73,9 +73,7 @@ contract BrainPassTest is PRBTest, Cheats {
         mockERC20.mint(alice, 20000e18);
         vm.startPrank(alice);
         mockERC20.approve(address(BrainPass), 9000e18);
-        vm.expectRevert(
-            BrainPassCollectibles.PassTypeIsPaused.selector
-        );
+        vm.expectRevert(BrainPassCollectibles.PassTypeIsPaused.selector);
         BrainPass.mintNFT(1, 172800, 5184000);
     }
 
@@ -89,7 +87,7 @@ contract BrainPassTest is PRBTest, Cheats {
         assertEq(BrainPass.balanceOf(alice), 0);
         BrainPass.mintNFT(1, 172800, 5184000);
         assertEq(BrainPass.balanceOf(alice), 1);
-        assertEq(mockERC20.balanceOf(address(this)), 870e18);
+        assertEq(mockERC20.balanceOf(address(BrainPass)), 870e18);
         uint256 mintedPass = BrainPass.getUserPassDetails(alice).tokenId;
         assertEq(mintedPass, 1);
         vm.stopPrank();
@@ -152,7 +150,7 @@ contract BrainPassTest is PRBTest, Cheats {
         uint256 _tokenId = BrainPass.getUserPassDetails(alice).tokenId;
         assertEq(_tokenId, 1);
         BrainPass.increaseEndTime(_tokenId, 8640000);
-        assertEq(mockERC20.balanceOf(address(this)), 1470e18);
+        assertEq(mockERC20.balanceOf(address(BrainPass)), 1470e18);
         BrainPass.getUserPassDetails(alice);
         uint _endTine = BrainPass.getUserPassDetails(alice).endTimestamp;
         assertEq(_endTine, 8640000);
@@ -188,13 +186,15 @@ contract BrainPassTest is PRBTest, Cheats {
     }
 
     function testWithdrawTokens() public {
-        vm.expectRevert(BrainPassCollectibles.NoIQLeftToWithdraw.selector);
-        BrainPass.withdrawIQ();
+        vm.expectRevert(BrainPassCollectibles.IQNotEnoughToWithdraw.selector);
+        BrainPass.withdrawIQ(alice, 200e18);
         assertEq(mockERC20.balanceOf(address(BrainPass)), 0);
         mockERC20.mint(address(BrainPass), 20000e18);
         assertEq(mockERC20.balanceOf(address(BrainPass)), 20000e18);
-        vm.expectRevert(BrainPassCollectibles.NoEtherLeftToWithdraw.selector);
-        BrainPass.withdrawEther();
+        vm.expectRevert(
+            BrainPassCollectibles.EtherNotEnoughToWithdraw.selector
+        );
+        BrainPass.withdrawEther(alice, 200e18);
     }
 
     function testConfigureMintLimit() public {
