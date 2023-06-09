@@ -12,6 +12,7 @@ contract BrainPassValidiator {
     /// -----------------------------------------------------------------------
     error UserDoesNotHaveAPass();
     error UserPassExpired();
+    error PassIsPaused();
 
     /// -----------------------------------------------------------------------
     /// variables
@@ -33,6 +34,14 @@ contract BrainPassValidiator {
         if (brainPass.getUserPassDetails(user).endTimestamp < block.timestamp) {
             revert UserPassExpired();
         }
+        if (
+            brainPass
+                .getPassType(brainPass.getUserPassDetails(user).passId)
+                .isPaused
+        ) {
+            revert PassIsPaused();
+        }
+
         return true;
     }
 }

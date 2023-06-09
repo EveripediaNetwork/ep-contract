@@ -311,7 +311,7 @@ contract BrainPassCollectibles is ERC721, Pausable, Ownable {
         uint256 passId,
         uint256 startTimestamp,
         uint256 endTimestamp
-    ) public view returns (uint256) {
+    ) internal view returns (uint256) {
         PassType memory passType = passTypes[passId];
         uint256 subscriptionPeriodInSeconds = endTimestamp - startTimestamp;
 

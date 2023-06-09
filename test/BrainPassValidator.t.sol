@@ -60,7 +60,7 @@ contract BrainPassValidatorTest is PRBTest, Cheats {
         vm.stopPrank();
         assertEq(brainPassValidator.validate(alice), true);
         BrainPass.togglePassTypeStatus(1);
-        vm.expectRevert(BrainPassCollectibles.PassTypeIsPaused.selector);
+        vm.expectRevert(BrainPassValidiator.PassIsPaused.selector);
         brainPassValidator.validate(alice);
     }
 }
