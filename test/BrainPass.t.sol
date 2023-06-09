@@ -218,5 +218,7 @@ contract BrainPassTest is PRBTest, Cheats {
         assertEq(BrainPass.balanceOf(alice), 0);
         BrainPass.mintNFT(1, 172800, 5184000);
         assertEq(BrainPass.balanceOf(alice), 1);
+        BrainPass.safeTransferFrom(alice, bob, 1);
+        assertEq(BrainPass.balanceOf(bob), 1);
     }
 }

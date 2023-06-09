@@ -2,9 +2,9 @@
 pragma solidity ^0.8.13;
 
 import {ERC721} from "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
+import {ERC721Pausable} from "openzeppelin-contracts/contracts/token/ERC721/extensions/ERC721Pausable.sol";
 import {Counters} from "openzeppelin-contracts/contracts/utils/Counters.sol";
 import "openzeppelin-contracts/contracts/access/Ownable.sol";
-import "openzeppelin-contracts/contracts/security/Pausable.sol";
 import {Wiki} from "../../src/Wiki.sol";
 
 interface IERC20 {
@@ -23,8 +23,7 @@ interface IERC20 {
 /// @author Oleanji
 /// @notice A pass for IQ Wiki Editors
 
-contract BrainPassCollectibles is ERC721, Pausable, Ownable {
-
+contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
     /// -----------------------------------------------------------------------
     /// Errors
     /// -----------------------------------------------------------------------
@@ -97,11 +96,21 @@ contract BrainPassCollectibles is ERC721, Pausable, Ownable {
     constructor(
         address IqAddr,
         string memory _baseTokenURI
-    ) ERC721("BAINPASS", "BEP") {
+    ) ERC721("BRAINPASS", "BRP") {
         iqToken = IqAddr;
         passIdTracker.increment();
         tokenIdTracker.increment();
         setBaseURI(_baseTokenURI);
+    }
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal virtual override(ERC721, ERC721Pausable) {
+        super._beforeTokenTransfer(from, to, amount);
+        // if(!paused())
+        // require(, "ERC721Pausable: token transfer while paused");
     }
 
     /// -----------------------------------------------------------------------
