@@ -7,12 +7,6 @@ import {BrainPassCollectibles} from "./BrainPass.sol";
 /// @author Oleanji
 /// @notice A validation for the Nft
 contract BrainPassValidiator {
-    /// -----------------------------------------------------------------------
-    /// Errors
-    /// -----------------------------------------------------------------------
-    error UserDoesNotHaveAPass();
-    error UserPassExpired();
-    error PassIsPaused();
 
     /// -----------------------------------------------------------------------
     /// variables
@@ -30,16 +24,16 @@ contract BrainPassValidiator {
     /// @notice Validate Post
     /// @param user The user to validiate
     function validate(address user) external view returns (bool) {
-        if (brainPass.balanceOf(user) <= 0) revert UserDoesNotHaveAPass();
+        if (brainPass.balanceOf(user) <= 0) return false;
         if (brainPass.getUserPassDetails(user).endTimestamp < block.timestamp) {
-            revert UserPassExpired();
+            return false;
         }
         if (
             brainPass
                 .getPassType(brainPass.getUserPassDetails(user).passId)
                 .isPaused
         ) {
-            revert PassIsPaused();
+            return false;
         }
 
         return true;

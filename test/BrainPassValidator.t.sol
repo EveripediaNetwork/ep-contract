@@ -28,8 +28,7 @@ contract BrainPassValidatorTest is PRBTest, Cheats {
     }
 
     function testPostWikiUserWithNoPass() public {
-        vm.expectRevert(BrainPassValidiator.UserDoesNotHaveAPass.selector);
-        brainPassValidator.validate(alice);
+        assertEq(brainPassValidator.validate(alice), false);
     }
 
     function testPostWikiRight() public {
@@ -48,8 +47,7 @@ contract BrainPassValidatorTest is PRBTest, Cheats {
         BrainPass.mintNFT(1, 1685638993, 1693587793);
         assertEq(brainPassValidator.validate(alice), true);
         skip(1685638993 + 7948800);
-        vm.expectRevert(BrainPassValidiator.UserPassExpired.selector);
-        brainPassValidator.validate(alice);
+        assertEq(brainPassValidator.validate(alice), false);
     }
 
     function testPostWikiWithPausedPass() public {
@@ -60,7 +58,7 @@ contract BrainPassValidatorTest is PRBTest, Cheats {
         vm.stopPrank();
         assertEq(brainPassValidator.validate(alice), true);
         BrainPass.togglePassTypeStatus(1);
-        vm.expectRevert(BrainPassValidiator.PassIsPaused.selector);
-        brainPassValidator.validate(alice);
+
+        assertEq(brainPassValidator.validate(alice), false);
     }
 }
