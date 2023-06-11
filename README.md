@@ -96,7 +96,6 @@ Withdraws any amount of IQ tokens held in the contract. Can only be called by th
 ## `getUserPassDetails()`
 Retrieves the details of an NFT owned by a specific user for a given pass type.
 - `user`: Address of the user.
-- `passId`: ID of the pass type.
 
 ## `getAllPassType()`
 Retrieves the details of all the pass types added to the contract.
@@ -112,7 +111,7 @@ The contract emits the following events:
 - `BrainPassBought`: Emitted when a user buys a BrainPass NFT.
 - `TimeIncreased`: Emitted when the time of a BrainPass NFT is increased.
 - `NewPassAdded`: Emitted when a new pass type is added.
-- `PassTypePaused`: Emitted when a pass is paused.
+- `PassTypeStatusToggled`: Emitted when a pass is paused or unpaused.
 
 ## PICTORAL EXPLANATION
 ![image](https://github.com/EveripediaNetwork/ep-contract/assets/75235148/eee4d631-28d9-4ca4-bc0e-62e5a02998a2)
