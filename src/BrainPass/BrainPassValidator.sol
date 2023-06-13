@@ -24,15 +24,8 @@ contract BrainPassValidiator {
     /// @notice Validate Post
     /// @param user The user to validiate
     function validate(address user) external view returns (bool) {
-        if (brainPass.balanceOf(user) <= 0) return false;
+        if (brainPass.balanceOf(user) == 0) return false;
         if (brainPass.getUserPassDetails(user).endTimestamp < block.timestamp) {
-            return false;
-        }
-        if (
-            brainPass
-                .getPassType(brainPass.getUserPassDetails(user).passId)
-                .isPaused
-        ) {
             return false;
         }
 

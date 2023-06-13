@@ -185,7 +185,7 @@ contract BrainPassTest is PRBTest, Cheats {
         BrainPass.mintNFT(2, 172800, 5184000);
     }
 
-    function testWithdrawTokens() public {
+    function testWithdrawTokensErrors() public {
         vm.expectRevert(BrainPassCollectibles.IQNotEnoughToWithdraw.selector);
         BrainPass.withdrawIQ(alice, 200e18);
         assertEq(mockERC20.balanceOf(address(BrainPass)), 0);
@@ -195,6 +195,17 @@ contract BrainPassTest is PRBTest, Cheats {
             BrainPassCollectibles.EtherNotEnoughToWithdraw.selector
         );
         BrainPass.withdrawEther(alice, 200e18);
+    }
+
+    function testWithdrawTokens() public {
+        mockERC20.mint(address(BrainPass), 200e18);
+        BrainPass.withdrawIQ(alice, 200e18);
+        assertEq(mockERC20.balanceOf(address(alice)), 200e18);
+        vm.deal(address(BrainPass), 4 ether);
+        assertEq(address(BrainPass).balance, 4e18);
+        assertEq(address(alice).balance, 0);
+        BrainPass.withdrawEther(alice, 4e18);
+        assertEq(address(alice).balance, 4e18);
     }
 
     function testConfigureMintLimit() public {

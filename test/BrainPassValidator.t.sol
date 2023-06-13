@@ -49,16 +49,4 @@ contract BrainPassValidatorTest is PRBTest, Cheats {
         skip(1685638993 + 7948800);
         assertEq(brainPassValidator.validate(alice), false);
     }
-
-    function testPostWikiWithPausedPass() public {
-        mockERC20.mint(alice, 20000e18);
-        vm.startPrank(alice);
-        mockERC20.approve(address(BrainPass), 1700e18);
-        BrainPass.mintNFT(1, 1685638993, 1693587793);
-        vm.stopPrank();
-        assertEq(brainPassValidator.validate(alice), true);
-        BrainPass.togglePassTypeStatus(1);
-
-        assertEq(brainPassValidator.validate(alice), false);
-    }
 }
