@@ -61,7 +61,6 @@ contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
         string name;
         uint256 pricePerDay;
         uint256 maxTokens;
-        uint256 discount;
         uint256 lastMintedId;
         bool isPaused;
     }
@@ -123,10 +122,6 @@ contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
         _unpause();
     }
 
-    function setBaseURI(string memory _baseTokenURI) public onlyOwner {
-        baseTokenURI = _baseTokenURI;
-    }
-
     /// @notice Change the MintLimit for the Nfts
     /// @param lowerLimit the new lower limit for how short a nft can be subscribed for
     /// @param upperLimit  the new upper limit for how long a nft can be subscribed for
@@ -142,12 +137,10 @@ contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
     /// @param pricePerDay the price per day of the new pass type
     /// @param name the name of the new pass type to be added
     /// @param maxTokens the total number of tokens in the pass
-    /// @param discount the amount in % to be deducted when buying the pass
     function addPassType(
         uint256 pricePerDay,
         string memory name,
-        uint256 maxTokens,
-        uint256 discount
+        uint256 maxTokens
     ) external onlyOwner whenNotPaused {
         if (maxTokens <= 0) revert InvalidMaxTokensForAPass();
         uint256 passId = passIdTracker.current();
@@ -156,7 +149,6 @@ contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
             name,
             pricePerDay,
             maxTokens,
-            discount,
             0,
             false
         );
@@ -178,7 +170,6 @@ contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
             passType.name,
             passType.pricePerDay,
             passType.maxTokens,
-            passType.discount,
             passType.lastMintedId,
             newStatus
         );
@@ -320,18 +311,9 @@ contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
         uint256 endTimestamp
     ) internal view returns (uint256) {
         PassType memory passType = passTypes[passId];
-        uint256 subscriptionPeriodInSeconds = endTimestamp - startTimestamp;
-
-        uint256 subscriptionPeriodInDays = subscriptionPeriodInSeconds / 1 days;
-
+        uint256 subscriptionPeriodInDays = (endTimestamp - startTimestamp) /1 days;
         // Calculate the total price
         uint256 totalPrice = subscriptionPeriodInDays * passType.pricePerDay;
-
-        if (passType.discount > 0) {
-            uint256 discountAmount = (totalPrice * passType.discount) / (100);
-            totalPrice = totalPrice - discountAmount;
-        }
-
         return totalPrice;
     }
 
@@ -349,6 +331,14 @@ contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
         return
             durationInDays >= MINT_LOWER_LIMIT &&
             durationInDays <= MINT_UPPER_LIMIT;
+    }
+
+    /// -----------------------------------------------------------------------
+    /// Public
+    /// -----------------------------------------------------------------------
+
+    function setBaseURI(string memory _baseTokenURI) public onlyOwner {
+        baseTokenURI = _baseTokenURI;
     }
 
     /// -----------------------------------------------------------------------

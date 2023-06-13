@@ -66,7 +66,6 @@ Adds a new pass type.
 - `pricePerDay`: Price per day of the new pass type.
 - `name`: Name of the new pass type.
 - `maxTokens`: Total number of tokens in the pass.
-- `discount`: Discount amount (in percentage) to be deducted when buying the pass.
 Only the contract owner can call this function and only when the contract is not paused 
 
 ## `togglePassTypeStatus()`

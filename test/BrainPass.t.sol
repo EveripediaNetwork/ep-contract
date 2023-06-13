@@ -23,11 +23,11 @@ contract BrainPassTest is PRBTest, Cheats {
             address(mockERC20),
             "http://example.com/"
         );
-        BrainPass.addPassType(15e18, "Gold", 200, 0);
+        BrainPass.addPassType(15e18, "Gold", 200);
     }
 
     function testAddPassType() public {
-        BrainPass.addPassType(15e18, "Gold", 200, 0);
+        BrainPass.addPassType(15e18, "Gold", 200);
         string memory _name = BrainPass.getPassType(1).name;
         assertEq(_name, "Gold");
     }
@@ -57,7 +57,7 @@ contract BrainPassTest is PRBTest, Cheats {
         vm.expectRevert(
             BrainPassCollectibles.InvalidMaxTokensForAPass.selector
         );
-        BrainPass.addPassType(15e18, "OleanjiPass", 0, 0);
+        BrainPass.addPassType(15e18, "OleanjiPass", 0);
     }
 
     function testPassTypeNotFound() public {
@@ -94,8 +94,8 @@ contract BrainPassTest is PRBTest, Cheats {
     }
 
     function testDifferentPassMint() public {
-        BrainPass.addPassType(15e18, "OleanjiPass", 2, 0);
-        BrainPass.addPassType(15e18, "KesarPass", 2, 0);
+        BrainPass.addPassType(15e18, "OleanjiPass", 2);
+        BrainPass.addPassType(15e18, "KesarPass", 2);
         mockERC20.mint(alice, 20000e18);
         mockERC20.mint(doe, 20000e18);
 
@@ -158,13 +158,13 @@ contract BrainPassTest is PRBTest, Cheats {
 
     function testGetAllPassType() public {
         assertEq(BrainPass.getAllPassType().length, 2);
-        BrainPass.addPassType(400e18, "Platinum", 3000, 10);
+        BrainPass.addPassType(400e18, "Platinum", 3000);
         assertEq(BrainPass.getPassType(2).name, "Platinum");
         assertEq(BrainPass.getAllPassType().length, 3);
     }
 
     function testMintNftWrong() public {
-        BrainPass.addPassType(15e18, "OleanjiPass", 2, 0);
+        BrainPass.addPassType(15e18, "OleanjiPass", 2);
         mockERC20.mint(alice, 20000e18);
         mockERC20.mint(bob, 20000e18);
         mockERC20.mint(doe, 20000e18);

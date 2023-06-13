@@ -24,7 +24,7 @@ contract BrainPassValidatorTest is PRBTest, Cheats {
             "http://example.com"
         );
         brainPassValidator = new BrainPassValidiator(address(BrainPass));
-        BrainPass.addPassType(15e18, "Gold", 200, 0);
+        BrainPass.addPassType(15e18, "Gold", 200);
     }
 
     function testPostWikiUserWithNoPass() public {
