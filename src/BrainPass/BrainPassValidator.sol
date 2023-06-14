@@ -28,7 +28,6 @@ contract BrainPassValidiator {
         if (brainPass.getUserPassDetails(user).endTimestamp < block.timestamp) {
             return false;
         }
-
         return true;
     }
 }

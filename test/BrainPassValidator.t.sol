@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 import {PRBTest} from "prb-test/PRBTest.sol";
 import {Cheats} from "forge-std/Cheats.sol";
-import "forge-std/console.sol";
 import {stdError} from "forge-std/Errors.sol";
 import {BrainPassCollectibles} from "../src/BrainPass/BrainPass.sol";
 import {ERC721TokenReceiver} from "solmate/tokens/ERC721.sol";
@@ -25,6 +24,7 @@ contract BrainPassValidatorTest is PRBTest, Cheats {
         );
         brainPassValidator = new BrainPassValidiator(address(BrainPass));
         BrainPass.addPassType(15e18, "Gold", 200);
+        mockERC20.mint(alice, 20000e18);
     }
 
     function testPostWikiUserWithNoPass() public {
@@ -32,7 +32,6 @@ contract BrainPassValidatorTest is PRBTest, Cheats {
     }
 
     function testPostWikiRight() public {
-        mockERC20.mint(alice, 20000e18);
         vm.startPrank(alice);
         mockERC20.approve(address(BrainPass), 1700e18);
         BrainPass.mintNFT(1, 1685638993, 1693587793); // june 1st - sept 1st (3 months)
@@ -41,7 +40,6 @@ contract BrainPassValidatorTest is PRBTest, Cheats {
     }
 
     function testPostWikiPassExpired() public {
-        mockERC20.mint(alice, 20000e18);
         vm.startPrank(alice);
         mockERC20.approve(address(BrainPass), 1700e18);
         BrainPass.mintNFT(1, 1685638993, 1693587793);

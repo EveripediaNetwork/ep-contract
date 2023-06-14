@@ -256,9 +256,10 @@ contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
         );
 
         addressToNFTPass[msg.sender] = purchase;
-        emit TimeIncreased(
+        emit PassTimeIncreased(
             msg.sender,
             price,
+            pass.passId,
             tokenId,
             pass.startTimestamp,
             pass.endTimestamp
@@ -342,7 +343,7 @@ contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
     /// Getters
     /// -----------------------------------------------------------------------
 
-    /// @notice Gets the tokenUri for the contract
+    /// @notice Gets the baseUri for the contract
     function _baseURI() internal view virtual override returns (string memory) {
         return baseTokenURI;
     }
@@ -381,17 +382,18 @@ contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
 
     event BrainPassBought(
         address indexed _owner,
-        string passType,
-        uint256 amount,
+        string _passName,
+        uint256 _price,
         uint256 _passId,
         uint256 _tokenId,
         uint256 _startTimestamp,
         uint256 _endTimestamp
     );
 
-    event TimeIncreased(
+    event PassTimeIncreased(
         address indexed _owner,
-        uint256 amount,
+        uint256 _price,
+        uint256 _passId,
         uint256 _tokenId,
         uint256 _startTimestamp,
         uint256 _newEndTimestamp

@@ -14,26 +14,27 @@ contract BrainPassTest is PRBTest, Cheats {
     address alice = vm.addr(0x2);
     address bob = vm.addr(0x3);
     address doe = vm.addr(0x4);
-    address sam = vm.addr(0x1);
     MockERC20 mockERC20;
 
     function setUp() public {
         mockERC20 = new MockERC20("Mock IQ Token", "MIT", 18); //mocking IQ token
         BrainPass = new BrainPassCollectibles(
             address(mockERC20),
-            "http://example.com/"
+            "https://example.com/"
         );
-        BrainPass.addPassType(15e18, "Gold", 200);
+        BrainPass.addPassType(15e18, "GoldPass", 200);
+        mockERC20.mint(alice, 20000e18);
+        mockERC20.mint(bob, 20000e18);
+        mockERC20.mint(doe, 20000e18);
     }
 
     function testAddPassType() public {
-        BrainPass.addPassType(15e18, "Gold", 200);
+        BrainPass.addPassType(15e18, "GoldPass", 200);
         string memory _name = BrainPass.getPassType(1).name;
-        assertEq(_name, "Gold");
+        assertEq(_name, "GoldPass");
     }
 
     function testmintNFTWrong() public {
-        mockERC20.mint(alice, 20000e18);
         vm.startPrank(alice);
         mockERC20.approve(address(BrainPass), 9000e18);
         assertEq(BrainPass.balanceOf(alice), 0);
@@ -45,7 +46,6 @@ contract BrainPassTest is PRBTest, Cheats {
     }
 
     function testMintDurationNotInTimeFrame() public {
-        mockERC20.mint(alice, 20000e18);
         vm.startPrank(alice);
         mockERC20.approve(address(BrainPass), 9000e18);
         vm.expectRevert(BrainPassCollectibles.DurationNotInTimeFrame.selector);
@@ -61,7 +61,6 @@ contract BrainPassTest is PRBTest, Cheats {
     }
 
     function testPassTypeNotFound() public {
-        mockERC20.mint(alice, 20000e18);
         vm.startPrank(alice);
         mockERC20.approve(address(BrainPass), 9000e18);
         vm.expectRevert(BrainPassCollectibles.PassTypeNotFound.selector);
@@ -70,7 +69,6 @@ contract BrainPassTest is PRBTest, Cheats {
 
     function testCannotMintPausedPass() public {
         BrainPass.togglePassTypeStatus(1);
-        mockERC20.mint(alice, 20000e18);
         vm.startPrank(alice);
         mockERC20.approve(address(BrainPass), 9000e18);
         vm.expectRevert(BrainPassCollectibles.PassTypeIsPaused.selector);
@@ -78,7 +76,6 @@ contract BrainPassTest is PRBTest, Cheats {
     }
 
     function testmintNFT() public {
-        mockERC20.mint(alice, 20000e18);
         vm.startPrank(alice);
         mockERC20.approve(address(BrainPass), 3e18);
         vm.expectRevert(stdError.arithmeticError);
@@ -96,11 +93,6 @@ contract BrainPassTest is PRBTest, Cheats {
     function testDifferentPassMint() public {
         BrainPass.addPassType(15e18, "OleanjiPass", 2);
         BrainPass.addPassType(15e18, "KesarPass", 2);
-        mockERC20.mint(alice, 20000e18);
-        mockERC20.mint(doe, 20000e18);
-
-        mockERC20.mint(bob, 20000e18);
-
         vm.startPrank(alice);
         mockERC20.approve(address(BrainPass), 20000e18);
         BrainPass.mintNFT(1, 172800, 5184000);
@@ -128,7 +120,6 @@ contract BrainPassTest is PRBTest, Cheats {
     }
 
     function testIncreaseTimeWrong() public {
-        mockERC20.mint(alice, 3000e18);
         vm.startPrank(alice);
         mockERC20.approve(address(BrainPass), 9000e18);
         BrainPass.mintNFT(1, 172800, 5184000);
@@ -141,7 +132,6 @@ contract BrainPassTest is PRBTest, Cheats {
     }
 
     function testIncreaseTime() public {
-        mockERC20.mint(alice, 20000e18);
         vm.startPrank(alice);
         mockERC20.approve(address(BrainPass), 12000e18);
         assertEq(BrainPass.balanceOf(alice), 0);
@@ -158,16 +148,13 @@ contract BrainPassTest is PRBTest, Cheats {
 
     function testGetAllPassType() public {
         assertEq(BrainPass.getAllPassType().length, 2);
-        BrainPass.addPassType(400e18, "Platinum", 3000);
+        BrainPass.addPassType(400e18, "PlatinumPass", 3000);
         assertEq(BrainPass.getPassType(2).name, "Platinum");
         assertEq(BrainPass.getAllPassType().length, 3);
     }
 
     function testMintNftWrong() public {
         BrainPass.addPassType(15e18, "OleanjiPass", 2);
-        mockERC20.mint(alice, 20000e18);
-        mockERC20.mint(bob, 20000e18);
-        mockERC20.mint(doe, 20000e18);
         vm.startPrank(alice);
         mockERC20.approve(address(BrainPass), 1700e18);
         assertEq(BrainPass.balanceOf(alice), 0);
@@ -200,7 +187,7 @@ contract BrainPassTest is PRBTest, Cheats {
     function testWithdrawTokens() public {
         mockERC20.mint(address(BrainPass), 200e18);
         BrainPass.withdrawIQ(alice, 200e18);
-        assertEq(mockERC20.balanceOf(address(alice)), 200e18);
+        assertEq(mockERC20.balanceOf(address(alice)), 20200e18);
         vm.deal(address(BrainPass), 4 ether);
         assertEq(address(BrainPass).balance, 4e18);
         assertEq(address(alice).balance, 0);
@@ -223,17 +210,35 @@ contract BrainPassTest is PRBTest, Cheats {
         BrainPass.mintNFT(1, 172800, 5184000);
         vm.stopPrank();
         BrainPass.unpause();
-        mockERC20.mint(alice, 20000e18);
         vm.startPrank(alice);
         mockERC20.approve(address(BrainPass), 19700e18);
         assertEq(BrainPass.balanceOf(alice), 0);
         BrainPass.mintNFT(1, 172800, 5184000);
         assertEq(BrainPass.balanceOf(alice), 1);
         vm.stopPrank();
+    }
+
+    function testTokenTranferWrong() public {
+        vm.startPrank(alice);
+        mockERC20.approve(address(BrainPass), 19700e18);
+        assertEq(BrainPass.balanceOf(alice), 0);
+        BrainPass.mintNFT(1, 172800, 5184000);
+        vm.stopPrank();
         BrainPass.pause();
         vm.startPrank(alice);
         vm.expectRevert("ERC721Pausable: token transfer while paused");
         BrainPass.safeTransferFrom(alice, bob, 1);
+        assertEq(BrainPass.balanceOf(alice), 1);
         assertEq(BrainPass.balanceOf(bob), 0);
+    }
+
+    function testTokenTranfer() public {
+        vm.startPrank(alice);
+        mockERC20.approve(address(BrainPass), 19700e18);
+        assertEq(BrainPass.balanceOf(alice), 0);
+        BrainPass.mintNFT(1, 172800, 5184000);
+        BrainPass.safeTransferFrom(alice, bob, 1);
+        assertEq(BrainPass.balanceOf(alice), 0);
+        assertEq(BrainPass.balanceOf(bob), 1);
     }
 }
