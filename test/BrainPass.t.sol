@@ -97,21 +97,21 @@ contract BrainPassTest is PRBTest, Cheats {
         mockERC20.approve(address(BrainPass), 20000e18);
         BrainPass.mintNFT(1, 172800, 5184000);
         uint256 firstId = BrainPass.getUserPassDetails(alice).tokenId;
-        assertEq(BrainPass.tokenURI(firstId), "http://example.com/1");
+        assertEq(BrainPass.tokenURI(firstId), "https://example.com/1");
         console.log(BrainPass.tokenURI(firstId), firstId);
         vm.stopPrank();
         vm.startPrank(doe);
         mockERC20.approve(address(BrainPass), 20000e18);
         BrainPass.mintNFT(2, 172800, 5184000);
         uint256 newId = BrainPass.getUserPassDetails(doe).tokenId;
-        assertEq(BrainPass.tokenURI(newId), "http://example.com/2");
+        assertEq(BrainPass.tokenURI(newId), "https://example.com/2");
         console.log(BrainPass.tokenURI(newId), newId);
         vm.stopPrank();
         vm.startPrank(bob);
         mockERC20.approve(address(BrainPass), 20000e18);
         BrainPass.mintNFT(3, 172800, 5184000);
         uint256 newIds = BrainPass.getUserPassDetails(bob).tokenId;
-        assertEq(BrainPass.tokenURI(newIds), "http://example.com/3");
+        assertEq(BrainPass.tokenURI(newIds), "https://example.com/3");
         console.log(BrainPass.tokenURI(newIds), newIds);
         uint256 mintedPass = BrainPass.getUserPassDetails(doe).tokenId;
         console.log(BrainPass.balanceOf(alice));
@@ -149,7 +149,7 @@ contract BrainPassTest is PRBTest, Cheats {
     function testGetAllPassType() public {
         assertEq(BrainPass.getAllPassType().length, 2);
         BrainPass.addPassType(400e18, "PlatinumPass", 3000);
-        assertEq(BrainPass.getPassType(2).name, "Platinum");
+        assertEq(BrainPass.getPassType(2).name, "PlatinumPass");
         assertEq(BrainPass.getAllPassType().length, 3);
     }
 
