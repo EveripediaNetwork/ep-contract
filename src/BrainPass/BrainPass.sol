@@ -102,14 +102,6 @@ contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
         setBaseURI(_baseTokenURI);
     }
 
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal virtual override(ERC721, ERC721Pausable) {
-        super._beforeTokenTransfer(from, to, amount);
-    }
-
     /// -----------------------------------------------------------------------
     /// External functions
     /// -----------------------------------------------------------------------
@@ -190,7 +182,6 @@ contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
         if (addressToNFTPass[msg.sender].tokenId != 0)
             revert AlreadyMintedAPass();
         PassType storage passType = passTypes[passId];
-
         if (passType.isPaused) revert PassTypeIsPaused();
         if (passType.lastMintedId >= passType.maxTokens)
             revert PassMaxSupplyReached();
@@ -198,14 +189,12 @@ contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
             revert DurationNotInTimeFrame();
 
         uint256 price = calculatePrice(passId, startTimestamp, endTimestamp);
-
         bool success = IERC20(iqToken).transferFrom(
             msg.sender,
             address(this),
             price
         );
         if (!success) revert MintingPaymentFailed();
-
         uint256 tokenId = tokenIdTracker.current();
         passType.lastMintedId += 1;
         UserPassItem memory purchase = UserPassItem(
@@ -215,14 +204,14 @@ contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
             endTimestamp
         );
         addressToNFTPass[msg.sender] = purchase;
-
         tokenIdTracker.increment();
         _safeMint(msg.sender, tokenId);
 
         emit BrainPassBought(
             msg.sender,
-            tokenId,
+            price,
             passId,
+            tokenId,
             startTimestamp,
             endTimestamp
         );
@@ -248,7 +237,6 @@ contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
         } else {
             newStartTime = pass.endTimestamp;
         }
-
         if (!validatePassDuration(newStartTime, newEndTime))
             revert DurationNotInTimeFrame();
 
@@ -259,7 +247,6 @@ contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
             price
         );
         if (!success) revert IncreseTimePaymentFailed();
-
         UserPassItem memory purchase = UserPassItem(
             pass.tokenId,
             pass.passId,
@@ -268,9 +255,9 @@ contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
         );
 
         addressToNFTPass[msg.sender] = purchase;
-
         emit TimeIncreased(
             msg.sender,
+            price,
             tokenId,
             pass.startTimestamp,
             pass.endTimestamp
@@ -311,7 +298,8 @@ contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
         uint256 endTimestamp
     ) internal view returns (uint256) {
         PassType memory passType = passTypes[passId];
-        uint256 subscriptionPeriodInDays = (endTimestamp - startTimestamp) /1 days;
+        uint256 subscriptionPeriodInDays = (endTimestamp - startTimestamp) /
+            1 days;
         // Calculate the total price
         uint256 totalPrice = subscriptionPeriodInDays * passType.pricePerDay;
         return totalPrice;
@@ -331,6 +319,14 @@ contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
         return
             durationInDays >= MINT_LOWER_LIMIT &&
             durationInDays <= MINT_UPPER_LIMIT;
+    }
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal virtual override(ERC721, ERC721Pausable) {
+        super._beforeTokenTransfer(from, to, amount);
     }
 
     /// -----------------------------------------------------------------------
@@ -384,6 +380,7 @@ contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
 
     event BrainPassBought(
         address indexed _owner,
+        uint256 amount,
         uint256 _passId,
         uint256 _tokenId,
         uint256 _startTimestamp,
@@ -392,6 +389,7 @@ contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
 
     event TimeIncreased(
         address indexed _owner,
+        uint256 amount,
         uint256 _tokenId,
         uint256 _startTimestamp,
         uint256 _newEndTimestamp
