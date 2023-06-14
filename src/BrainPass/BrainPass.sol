@@ -209,6 +209,7 @@ contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
 
         emit BrainPassBought(
             msg.sender,
+            passType.name,
             price,
             passId,
             tokenId,
@@ -380,6 +381,7 @@ contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
 
     event BrainPassBought(
         address indexed _owner,
+        string passType,
         uint256 amount,
         uint256 _passId,
         uint256 _tokenId,
