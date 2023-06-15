@@ -11,7 +11,7 @@ contract BrainPassDeployer is Script {
         console.log("Deploying Brainpass deployer....");
         BrainPassCollectibles brainPass = new BrainPassCollectibles(
             0x5E959c60f86D17fb7D764AB69B654227d464E820,
-            "https://example.com/"
+            "https://api.dev.braindao.org/brainpass/"
         );
         console.log("Brainpass Deployed To:", address(brainPass));
         vm.stopBroadcast();

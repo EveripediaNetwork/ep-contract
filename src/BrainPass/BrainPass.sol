@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {ERC721} from "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
+import {Strings} from "openzeppelin-contracts/contracts/utils/Strings.sol";
 import {ERC721Pausable} from "openzeppelin-contracts/contracts/token/ERC721/extensions/ERC721Pausable.sol";
 import {Counters} from "openzeppelin-contracts/contracts/utils/Counters.sol";
 import "openzeppelin-contracts/contracts/access/Ownable.sol";
@@ -87,6 +88,8 @@ contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
     uint256 public MINT_LOWER_LIMIT = 28;
     uint256 public MINT_UPPER_LIMIT = 365;
     string public baseTokenURI;
+
+    using Strings for uint256;
 
     /// -----------------------------------------------------------------------
     /// Constructor
@@ -329,6 +332,19 @@ contract BrainPassCollectibles is ERC721, ERC721Pausable, Ownable {
         uint256 amount
     ) internal virtual override(ERC721, ERC721Pausable) {
         super._beforeTokenTransfer(from, to, amount);
+    }
+
+    function tokenURI(
+        uint256 tokenId
+    ) public view virtual override returns (string memory) {
+        require(_exists(tokenId), "Not Exist");
+
+        string memory baseURI = _baseURI();
+
+        return
+            bytes(baseURI).length > 0
+                ? string(abi.encodePacked(baseURI, tokenId.toString(), ".json"))
+                : "";
     }
 
     /// -----------------------------------------------------------------------
