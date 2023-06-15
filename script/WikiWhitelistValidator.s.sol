@@ -22,10 +22,8 @@ contract WikiWhitelistValidator is Script {
         validator.whitelistEditor(address(0xF6d9467758C08d05571f1bFa0a03A2286cE1F043));
         validator.whitelistEditor(address(0x2fE6aCD015384E1ee5138eF79fe1a434dA8FA12e));
         validator.whitelistEditor(address(0xb029c0367CCFeEFBc6D00B4cc22fcbFd6A781F5c));
-
         validator.whitelistEditor(address(0x9fEAB70f3c4a944B97b7565BAc4991dF5B7A69ff));
         validator.whitelistEditor(address(0x14B68b85E1037d1C75726b7794e99C20554f9CC3));
-
         validator.setOwner(owner);
 
         vm.stopBroadcast();
